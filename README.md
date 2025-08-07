@@ -2,6 +2,10 @@
 
 # Table of Contents
 
+## Core Libraries & APIs
+
+- [NetCord](https://github.com/NetCordDev/NetCord): For Discord interaction.
+- ...
 
 ## 📄 Documentation
 
