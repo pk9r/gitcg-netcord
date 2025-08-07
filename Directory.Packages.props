@@ -1,16 +1,20 @@
 <Project>
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.0"/>
-        <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0"/>
-        <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.4.0"/>
-        <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0"/>
-        <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0"/>
-        <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0"/>
-        <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0"/>
-        <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0"/>
-    </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.0" />
+    <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.4.0" />
+    <PackageVersion Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.4.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="9.7.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.4.0" />
+    <PackageVersion Include="NetCord.Hosting.Services" Version="1.0.0-alpha.410" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
+  </ItemGroup>
 </Project>
