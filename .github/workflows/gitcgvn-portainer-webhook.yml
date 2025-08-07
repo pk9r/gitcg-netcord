@@ -1,0 +1,19 @@
+name: Trigger Gitcgvn Portainer Webhook
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image on Release Tag"]
+    types:
+      - completed
+
+jobs:
+  trigger-webhook:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: gitcgvn
+
+    steps:
+      - name: Trigger Portainer webhook
+        run: |
+          echo "Triggering Portainer webhook..."
+          curl -X POST ${{ secrets.PORTAINER_WEBHOOK_URL }}
