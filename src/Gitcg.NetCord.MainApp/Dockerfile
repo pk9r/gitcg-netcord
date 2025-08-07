@@ -8,6 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj", "src/Gitcg.NetCord.MainApp/"]
+COPY ["src/ServiceDefaults/ServiceDefaults.csproj", "src/ServiceDefaults/"]
 RUN dotnet restore "src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj"
 COPY . .
 WORKDIR "/src/src/Gitcg.NetCord.MainApp"
