@@ -12,6 +12,8 @@
 
 ## 🩹 Support
 
+- [Discord Server](https://discord.gg/7ME6bwkQSs): Join for support and discussions.
+
 ## 📜 License
 
 This repository is released under the [MIT License](LICENSE.md).
