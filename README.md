@@ -5,7 +5,8 @@
 ## ⚙️ Core Libraries & APIs
 
 - [NetCord](https://github.com/NetCordDev/NetCord): For Discord interaction.
-- ...
+- [ImageSharp](https://github.com/SixLabors/ImageSharp): For image processing.
+  - [SkiaSharp](https://github.com/mono/SkiaSharp): Migration from ImageSharp to SkiaSharp in future versions.
 
 ## 📄 Documentation
 

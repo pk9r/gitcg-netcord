@@ -1,4 +1,5 @@
 using Gitcg.NetCord.MainApp.Components;
+using Gitcg.NetCord.MainApp.Extensions;
 using Gitcg.NetCord.MainApp.Infrastructure;
 using NetCord;
 using NetCord.Gateway;
@@ -59,7 +60,12 @@ app.AddSlashCommand(
     handler: () => "Pong!"
 );
 
-app.MapGet("/api/", () => "Hello World!");
+app.AddDiscordBotModules();
+
+app.MapGet(
+    pattern: "/api/", 
+    handler: () => "Hello World!"
+);
 
 app.UseGatewayHandlers();
 
