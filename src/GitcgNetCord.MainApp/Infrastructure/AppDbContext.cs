@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
     public DbSet<DiscordUser> DiscordUsers { get; set; } = null!;
     public DbSet<HoyolabAccount> HoyolabAccounts { get; set; } = null!;
     public DbSet<ActiveHoyolabAccount> ActiveHoyolabAccounts { get; set; } = null!;
+    public DbSet<DiscordCardCodeChannel> DiscordCardCodeChannels { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

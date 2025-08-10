@@ -23,8 +23,8 @@ public static class Extensions
     {
         // Feature modules
         host.AddCardCodeModule();
-        // host.AddHoyolabAccountModule();
-        // host.AddHoyolabGcgModule();
+        host.AddHoyolabAccountModule();
+        host.AddHoyolabGcgModule();
 
         // Utility modules
         host.AddRoleEmojisModule();
@@ -75,6 +75,7 @@ public static class Extensions
     )
     {
         services.AddScoped<ActiveHoyolabAccountService>();
+        services.AddScoped<DiscordCardCodeChannelService>();
         services.AddScoped<DiscordUserService>();
         services.AddScoped<HoyolabAccountService>();
 
