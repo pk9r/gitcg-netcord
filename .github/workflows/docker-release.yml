@@ -31,7 +31,7 @@ jobs:
       - name: Build Docker image with both tags
         run: |
           docker build \
-            -f src/Gitcg.NetCord.MainApp/Dockerfile \
+            -f src/GitcgNetCord.MainApp/Dockerfile \
             -t ghcr.io/${{ github.repository }}:${{ env.TAG }} \
             -t ghcr.io/${{ github.repository }}:latest \
             .

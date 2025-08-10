@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gitcg.NetCord.MainApp\Gitcg.NetCord.MainApp.csproj" />
+    <ProjectReference Include="..\GitcgNetCord.MainApp\GitcgNetCord.MainApp.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="/"/>
+    <link rel="stylesheet" href="@Assets["app.css"]"/>
+    <link rel="stylesheet" href="@Assets["GitcgNetCord.MainApp.styles.css"]"/>
+    <ImportMap/>
+    <HeadOutlet @rendermode="InteractiveServer"/>
+
+    <title>GITCG NetCord Main App</title>
+</head>
+
+<body>
+
+<Routes @rendermode="InteractiveServer"/>
+
+@* ReSharper disable Html.PathError *@
+<script src="_framework/blazor.web.js"></script>
+
+</body>
+
+</html>
