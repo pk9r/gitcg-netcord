@@ -19,7 +19,7 @@ public enum SharingDecodeType
 
 public static class SharingDecodeTypeExtensions
 {
-    private static readonly IEnumerable<SharingDecodeType> _createImageTypes =
+    private static readonly IEnumerable<SharingDecodeType> CreateImageTypes =
     [
         SharingDecodeType.ImageSimplest,
         SharingDecodeType.ImageGameBackground,
@@ -28,7 +28,7 @@ public static class SharingDecodeTypeExtensions
 
     public static bool IsCreateImageType(this SharingDecodeType type)
     {
-        return _createImageTypes.Contains(type);
+        return CreateImageTypes.Contains(type);
     }
 }
 

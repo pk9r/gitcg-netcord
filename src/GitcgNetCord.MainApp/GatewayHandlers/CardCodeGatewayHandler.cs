@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Configuration;
+using GitcgNetCord.MainApp.Entities;
+using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgPainter.ImageCreators.Deck;
 using HoyolabHttpClient.Models.Interfaces;
@@ -18,7 +20,8 @@ public partial class CardCodeGatewayHandler(
     GatewayClient client,
     HoyolabDecoder decoder,
     IOptions<CardCodeModuleOptions> rawOptions,
-    DeckImageCreatorCollection deckImageCreatorCollection
+    DeckImageCreatorCollection deckImageCreatorCollection,
+    IServiceScopeFactory serviceScopeFactory
 ) : IMessageCreateGatewayHandler
 {
     private readonly CardCodeModuleOptions _options = rawOptions.Value;
@@ -28,7 +31,9 @@ public partial class CardCodeGatewayHandler(
         if (message.Author.IsBot)
             return;
 
-        if (!IsCardCodeChannel(message.ChannelId))
+        var dbChannel = await FindDbChannelAsync(message.ChannelId);
+        
+        if (dbChannel == null)
             return;
 
         var channel = message.Channel;
@@ -178,12 +183,23 @@ public partial class CardCodeGatewayHandler(
         //     .WithEmbeds());
     }
 
+    private async ValueTask<DiscordCardCodeChannel?> 
+        FindDbChannelAsync(ulong channelId)
+    {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var cardCodeChannelService = scope.ServiceProvider
+            .GetRequiredService<DiscordCardCodeChannelService>();
+        
+        var dbChannel = await cardCodeChannelService
+            .FindAsync(channelId);
+        
+        return dbChannel;
+    }
+
+    [Obsolete]
     private bool IsCardCodeChannel(ulong channelId)
     {
-        if (_options.CardCodeChannels.Contains(channelId))
-            return true;
-
-        return false;
+        return _options.CardCodeChannels.Contains(channelId);
     }
 
     private async Task<MatchesResult>
@@ -214,9 +230,11 @@ public partial class CardCodeGatewayHandler(
         return new MatchesResult(items);
     }
 
-    record MatchesResult(List<ItemResult> Items);
+    private record MatchesResult(
+        List<ItemResult> Items
+    );
 
-    record ItemResult(
+    private record ItemResult(
         IDeckData Deck,
         string SharingCode
     );
