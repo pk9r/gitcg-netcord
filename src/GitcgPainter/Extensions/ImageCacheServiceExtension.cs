@@ -75,7 +75,7 @@ public static class ImageCacheServiceExtension
     private static bool IsArcaneCard(ICardBasic card)
     {
         return 
-            card is HoyolabHttpClient.Models.Action actionCard && 
+            card is Action actionCard && 
             actionCard.IsArcaneLegend();
     }
 

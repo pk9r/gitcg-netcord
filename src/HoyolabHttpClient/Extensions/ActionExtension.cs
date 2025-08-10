@@ -5,22 +5,22 @@ namespace HoyolabHttpClient.Extensions;
 
 public static class ActionExtension
 {
-    public static bool HasTag(this Models.Action action, CardTag tag)
+    public static bool HasTag(this Action action, CardTag tag)
     {
         return action.CardTags.Contains(tag.Value);
     }
 
-    public static bool IsArcaneLegend(this Models.Action action)
+    public static bool IsArcaneLegend(this Action action)
     {
         return action.HasTag(CardTag.ArcaneLegend);
     }
 
-    public static SkillElement? GetSkillElement(this Models.Action action)
+    public static SkillElement? GetSkillElement(this Action action)
     {
         return SkillElement.FromValue(action.SkillElement);
     }
 
-    public static SkillElement? GetSkillElement2(this Models.Action action)
+    public static SkillElement? GetSkillElement2(this Action action)
     {
         return SkillElement.FromValue(action.SkillElement2);
     }

@@ -11,5 +11,5 @@ public record Data : IDeckData
     public IReadOnlyList<Role> RoleCards { get; init; } = default!;
 
     [JsonPropertyName("action_cards")]
-    public IReadOnlyList<Models.Action> ActionCards { get; init; } = default!;
+    public IReadOnlyList<Action> ActionCards { get; init; } = default!;
 }

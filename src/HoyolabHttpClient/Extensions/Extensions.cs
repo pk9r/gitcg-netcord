@@ -8,7 +8,7 @@ namespace HoyolabHttpClient.Extensions;
 
 public static class Extensions
 {
-    public static IHttpClientBuilder AddHoyolabHttpClient(
+    public static void AddHoyolabHttpClient(
         this IServiceCollection services
     )
     {
@@ -19,7 +19,7 @@ public static class Extensions
         services.AddHttpClient("HoyolabHttpClient")
             .ConfigurePrimaryHttpMessageHandler(ConfigureHandler);
 
-        return services.AddHttpClient<HoyolabHttpClientService>()
+        services.AddHttpClient<HoyolabHttpClientService>()
             .ConfigureHttpClient(ConfigureClient)
             .ConfigurePrimaryHttpMessageHandler(ConfigureHandler);
     }
