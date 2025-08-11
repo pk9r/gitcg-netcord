@@ -6,7 +6,7 @@
 2. [📄 Documentation](#2--documentation)
 3. [🩹 Support](#3--support)
 4. [📜 License](#4--license)
-5. [🛠️ Development](#5-️%EF%B8%8F-development)
+5. [🛠️ Development](#5-%EF%B8%8F-development)
 
 ## 1. ⚙️ Core Libraries & APIs
 
