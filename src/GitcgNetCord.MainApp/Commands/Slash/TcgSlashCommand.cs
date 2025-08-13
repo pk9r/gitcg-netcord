@@ -64,7 +64,7 @@ public static class TcgSlashCommand
         var redColor = new NetCord.Color(Color.Red.ToArgb());
 
         HoyolabHttpClient.Responses.GcgBasicInfo.Data info;
-        
+
         try
         {
             info = await gcgBasicInfoService
@@ -121,10 +121,13 @@ public static class TcgSlashCommand
         string GetRoleEmojis(IEnumerable<string> s)
         {
             var roles = s.Select(url => cardRoles.Roles
-                .First(x => x.Basic.IconSmall == url)
+                .FirstOrDefault(x => x.Basic.IconSmall == url)
             );
-            var ids = roles.Select(x => x.Basic.ItemId.ToString());
-            return string.Join(" ", ids.Select(id => emojis[id]));
+            var ids = roles.Select(x => x?.Basic.ItemId.ToString());
+            return string.Join(
+                separator: " ",
+                values: ids.Select(id => id == null ? ":question:" : emojis[id].ToString())
+            );
         }
 
         string DisplayName(string name, bool isWin)
