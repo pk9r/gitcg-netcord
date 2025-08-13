@@ -1,8 +1,11 @@
-﻿using HoyolabHttpClient.Models.Interfaces;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using HoyolabHttpClient.Models.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace GitcgNetCord.MainApp.Models;
 
 public record DecodeResult(
-    bool IsValid,
+    ValidateOptionsResult Validate,
     IDeckData Deck = null!
 );

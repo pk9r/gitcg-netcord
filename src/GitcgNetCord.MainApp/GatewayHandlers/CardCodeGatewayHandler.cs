@@ -217,7 +217,7 @@ public partial class CardCodeGatewayHandler(
             var result = await decoder.DecodeAsync(sharingCode);
 
             var added = false;
-            if (result.IsValid)
+            if (result.Validate.Succeeded)
             {
                 var deck = result.Deck;
                 items.Add(new ItemResult(deck, sharingCode));
