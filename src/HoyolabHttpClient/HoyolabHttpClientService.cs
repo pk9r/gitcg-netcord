@@ -6,10 +6,12 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using HoyolabHttpClient.Responses;
+using HoyolabHttpClient.Responses.WebLoginByPassword;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using Data = HoyolabHttpClient.Responses.GcgBasicInfo.Data;
 
 namespace HoyolabHttpClient;
 
@@ -68,7 +70,7 @@ public class HoyolabHttpClientService
     //    return rolesGroupByElement;
     //}
 
-    public async Task<Responses.WebLoginByPassword.Result>
+    public async Task<Result>
         WebLoginByPasswordAsync(string account, string password)
     {
         var httpClient = CreateHttpClient();
@@ -96,7 +98,7 @@ public class HoyolabHttpClientService
         response.EnsureSuccessStatusCode();
 
         var value = await response.Content.ReadFromJsonAsync<
-            Responses.WebLoginByPassword.Response
+            Response
         >();
 
         ThrowIfNotSuccess(value);
@@ -112,11 +114,11 @@ public class HoyolabHttpClientService
 
         var authorize = new HoyolabAuthorize(uid, token);
 
-        return new Responses.WebLoginByPassword.Result(authorize, value.Data!);
+        return new Result(authorize, value.Data!);
     }
 
-        
-    public async Task<Responses.GcgBasicInfo.Data>
+
+    public async Task<Data>
         GetGcgBasicInfoAsync(
             string server, // Region, e.g. "os_asia", "os_europe", "os_america"
             string roleId, // Genshin Impact UID 
@@ -129,7 +131,7 @@ public class HoyolabHttpClientService
             httpClient = CreateHttpClient();
             ConfigAuthorizeClient(httpClient, authorize);
         }
-        
+
         var uri = GcgBasicInfoUri;
         uri = QueryHelpers.AddQueryString(uri, "server", server);
         uri = QueryHelpers.AddQueryString(uri, "role_id", roleId);
@@ -142,10 +144,10 @@ public class HoyolabHttpClientService
             .ReadFromJsonAsync<Responses.GcgBasicInfo.Response>();
 
         ThrowIfNotSuccess(result);
-        
+
         return result.Data!;
     }
-    
+
     public async Task<Responses.DeckList.Data>
         GetDeckListAsync(
             HoyolabAuthorize authorize,
@@ -156,11 +158,11 @@ public class HoyolabHttpClientService
         var uri = DeckListUri;
         uri = QueryHelpers.AddQueryString(uri, "role_id", roleId);
         uri = QueryHelpers.AddQueryString(uri, "server", server);
-        
+
         var httpClient = CreateHttpClient();
 
         ConfigAuthorizeClient(httpClient, authorize);
-        
+
         using var response = await httpClient.GetAsync(uri);
 
         response.EnsureSuccessStatusCode();
@@ -290,12 +292,14 @@ public class HoyolabHttpClientService
         return result.Data!;
     }
 
-    public async Task<Responses.DecodeCardCode.Data>
+    public async Task<Responses.DecodeCardCode.Result>
         DecodeCardCodeAsync(
             string code,
             string lang = "en-us"
         )
     {
+        var resultBuilder = new ValidateOptionsResultBuilder();
+
         var uri = DecodeCardCodeUri;
         AddLangQueryToUri(ref uri, lang);
 
@@ -304,16 +308,36 @@ public class HoyolabHttpClientService
         using var response = await _httpClient
             .PostAsJsonAsync(requestUri: uri, value: value);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            resultBuilder.AddError(
+                error: $"Failed to decode card code: {response.ReasonPhrase}"
+            );
 
-        var result = await response.Content
-            .ReadFromJsonAsync<
-                Responses.DecodeCardCode.Response
-            >();
+            return new Responses.DecodeCardCode.Result(
+                Validate: resultBuilder.Build()
+            );
+        }
 
-        ThrowIfNotSuccess(result);
+        var result = (await response.Content
+            .ReadFromJsonAsync<Responses.DecodeCardCode.Response>())!;
 
-        return result.Data!;
+        // ThrowIfNotSuccess(result);
+        if (result.Retcode != 0)
+        {
+            resultBuilder.AddError(
+                error: $"Hoyolab API return non-zero Retcode: {result.Retcode}. Message: {result.Message}."
+            );
+
+            return new Responses.DecodeCardCode.Result(
+                Validate: resultBuilder.Build()
+            );
+        }
+        
+        return new Responses.DecodeCardCode.Result(
+            Validate: resultBuilder.Build(),
+            Data: result.Data!
+        );
     }
 
     private static void AddLangQueryToUri(
@@ -362,7 +386,7 @@ public class HoyolabHttpClientService
     {
         return $"ltuid_v2={authorize.HoyolabUserId}; ltoken_v2={authorize.Token}";
     }
-    
+
     public static void ConfigAuthorizeClient(
         HttpClient client,
         HoyolabAuthorize authorize

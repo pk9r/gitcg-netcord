@@ -65,12 +65,12 @@ public static class DeckSlashCommand
             lang: lang
         );
 
-        if (!decodeResult.IsValid)
+        if (decodeResult.Validate.Failed)
         {
             await context.Interaction.ModifyResponseAsync(message => message
                 .AddEmbeds(new EmbedProperties()
                     .WithTitle("Invalid sharing code")
-                    // .WithDescription(decodeResult.ErrorMessage)
+                    .WithDescription(string.Join('\n', decodeResult.Validate.Failures))
                     .WithColor(new NetCord.Color(Color.Red.ToArgb()))
                 )
             );

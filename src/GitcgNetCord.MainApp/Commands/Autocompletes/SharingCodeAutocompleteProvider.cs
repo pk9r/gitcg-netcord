@@ -74,37 +74,37 @@ public class SharingCodeAutocompleteProvider(
             if (keyword.Length != SharedConstants.SharingCodeLength)
                 return;
 
-            try
-            {
-                var decoded = await hoyolab.DecodeCardCodeAsync(keyword);
+            var decoded = await hoyolab.DecodeCardCodeAsync(keyword);
 
-                var rolesDisplay = string.Join(
-                    separator: ", ",
-                    decoded.RoleCards.Select(x => x.Basic.Name)
-                );
-
-                var displayBuilder = new StringBuilder();
-                displayBuilder.Append(rolesDisplay);
-                displayBuilder.Append(" - ");
-                displayBuilder.Append($"{decoded.ActionCards.Count} Cards");
-
-                suggestions.Insert(
-                    index: 0,
-                    item: new ApplicationCommandOptionChoiceProperties(
-                        name: displayBuilder.ToString(),
-                        stringValue: keyword
-                    )
-                );
-            }
-            catch (Exception e)
+            if (decoded.Validate.Failed)
             {
                 suggestions.Add(
                     new ApplicationCommandOptionChoiceProperties(
-                        name: e.Message,
+                        name: decoded.Validate.FailureMessage,
                         stringValue: keyword
                     )
                 );
+                
+                return;
             }
+
+            var rolesDisplay = string.Join(
+                separator: ", ",
+                decoded.Data.RoleCards.Select(x => x.Basic.Name)
+            );
+
+            var displayBuilder = new StringBuilder();
+            displayBuilder.Append(rolesDisplay);
+            displayBuilder.Append(" - ");
+            displayBuilder.Append($"{decoded.Data.ActionCards.Count} Cards");
+
+            suggestions.Insert(
+                index: 0,
+                item: new ApplicationCommandOptionChoiceProperties(
+                    name: displayBuilder.ToString(),
+                    stringValue: keyword
+                )
+            );
         }
 
         async ValueTask AddAccountDecks()
@@ -135,7 +135,7 @@ public class SharingCodeAutocompleteProvider(
                         stringValue: keyword
                     )
                 );
-                
+
                 return;
             }
 
