@@ -43,6 +43,33 @@ public static class TcgSlashCommand
         var hoyolabAccount = await activeHoyolabAccountService
             .GetActiveHoyolabAccountAsync(context.User.Id);
 
+        var commands = await context.Client.Rest
+            .GetGlobalApplicationCommandsAsync(context.Client.Id);
+            
+        var accountCommand = commands
+            .First(x => x.Name == "hoyolab-accounts");
+        
+        if (hoyolabAccount == null && string.IsNullOrWhiteSpace(uid))
+        {
+            
+            await context.Interaction.ModifyResponseAsync(message =>
+            {
+                message.AddEmbeds(new EmbedProperties()
+                    .WithTitle("Error")
+                    .WithDescription(
+                        $"""
+                        You must have a Hoyolab account linked to your Discord account, or provide a UID.
+                        Please use the {accountCommand} command to link your Hoyolab account.
+                        Alternatively, you can provide a UID directly.
+                        """
+                    )
+                    .WithColor(new NetCord.Color(Color.Red.ToArgb()))
+                );
+            });
+            
+            return;
+        }
+        
         HoyolabAuthorize? authorize = null;
         if (hoyolabAccount != null)
         {
@@ -76,10 +103,15 @@ public static class TcgSlashCommand
             {
                 message.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
-                    .WithDescription(e.Message)
+                    .WithDescription(
+                        $"""
+                         {e.Message}
+                         If the UID is your own, use the command {accountCommand} to set up your Hoyolab account.
+                         """)
                     .WithColor(redColor)
                 );
             });
+            
             return;
         }
 
