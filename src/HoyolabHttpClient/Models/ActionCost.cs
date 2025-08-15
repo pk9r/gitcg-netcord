@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace HoyolabHttpClient.Responses.GcgBasicInfo;
+namespace HoyolabHttpClient.Models;
 
 public record ActionCost
 {
