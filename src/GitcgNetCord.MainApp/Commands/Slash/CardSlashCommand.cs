@@ -176,10 +176,10 @@ public static class CardSlashCommand
         var topUseCountsStringBuilder = new StringBuilder();
         for (var i = 0; i < topCharacterUseCounts.Length; i++)
         {
-            var card = topCharacterUseCounts[i];
+            var x = topCharacterUseCounts[i];
 
             topUseCountsStringBuilder.AppendLine(
-                $"{i + 1}. {card.Name} - {card.UseCount}"
+                $"{i + 1}. {emojis[x.Id.ToString()]} {x.Name} - {x.UseCount}"
             );
         }
 
