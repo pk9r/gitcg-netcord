@@ -9,6 +9,7 @@ using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgPainter.ImageCreators.Deck;
 using HoyolabHttpClient.Models.Interfaces;
 using Microsoft.Extensions.Options;
+using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Rest;
@@ -32,9 +33,19 @@ public partial class CardCodeGatewayHandler(
             return;
 
         var dbChannel = await FindDbChannelAsync(message.ChannelId);
+
+        var guildThread = message.Channel as GuildThread;
         
-        if (dbChannel == null)
+        if (dbChannel == null &&  guildThread == null)
             return;
+
+        if (guildThread != null)
+        {
+            dbChannel = await FindDbChannelAsync(guildThread.ParentId);
+            
+            if (dbChannel == null)
+                return;
+        }
 
         var channel = message.Channel;
         if (channel == null)
@@ -80,15 +91,18 @@ public partial class CardCodeGatewayHandler(
                     .WithEmbeds([summaryEmbed])
             );
 
-            var id = Convert.ToBase64String(
-                BitConverter.GetBytes(message.Id)
-            );
+            if (guildThread == null)
+            {
+                var id = Convert.ToBase64String(
+                    BitConverter.GetBytes(message.Id)
+                );
 
-            channel = await summaryMessage.CreateGuildThreadAsync(
-                new GuildThreadFromMessageProperties(
-                    name: $"Sharing code list #{id}"
-                )
-            );
+                channel = await summaryMessage.CreateGuildThreadAsync(
+                    new GuildThreadFromMessageProperties(
+                        name: $"Sharing code list #{id}"
+                    )
+                );
+            }
         }
 
         var deckImageCreator = deckImageCreatorCollection.GameBackground;
@@ -183,16 +197,16 @@ public partial class CardCodeGatewayHandler(
         //     .WithEmbeds());
     }
 
-    private async ValueTask<DiscordCardCodeChannel?> 
-        FindDbChannelAsync(ulong channelId)
+    private async ValueTask<DiscordCardCodeChannel?>
+        FindDbChannelAsync(ulong? channelId)
     {
         await using var scope = serviceScopeFactory.CreateAsyncScope();
         var cardCodeChannelService = scope.ServiceProvider
             .GetRequiredService<DiscordCardCodeChannelService>();
-        
+
         var dbChannel = await cardCodeChannelService
             .FindAsync(channelId);
-        
+
         return dbChannel;
     }
 
