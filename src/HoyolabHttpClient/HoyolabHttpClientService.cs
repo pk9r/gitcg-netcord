@@ -7,6 +7,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using HoyolabHttpClient.Configuration;
 using HoyolabHttpClient.Responses;
 using HoyolabHttpClient.Responses.WebLoginByPassword;
 using Microsoft.AspNetCore.WebUtilities;
@@ -36,6 +37,7 @@ public class HoyolabHttpClientService
 
     private const string DeckListUri = "event/game_record/genshin/api/gcg/deckList";
     private const string GcgBasicInfoUri = "event/game_record/genshin/api/gcg/basicInfo";
+    private const string GcgCardListUri = "event/game_record/genshin/api/gcg/cardList";
 
     private const string RoleSkillUri = "event/cardsquare/role/skill";
 
@@ -45,19 +47,30 @@ public class HoyolabHttpClientService
     private const string EncodeCardCodeUri = "event/cardsquare/encode_card_code";
     private const string DecodeCardCodeUri = "event/cardsquare/decode_card_code";
 
+    private readonly HoyolabAuthorize? _defaultAuthorize;
     private readonly HttpClient _httpClient;
     private readonly IHttpClientFactory _httpClientFactory;
 
     public HoyolabHttpClientService(
+        IOptions<HoyolabHttpClientOptions> options,
         HttpClient httpClient,
         IHttpClientFactory httpClientFactory
     )
     {
         _httpClient = httpClient;
         _httpClientFactory = httpClientFactory;
+        _defaultAuthorize = options.Value.DefaultAuthorize;
 
         _httpClient.BaseAddress = new Uri(
             uriString: "https://sg-public-api.hoyolab.com"
+        );
+
+        if (_defaultAuthorize == null)
+            return;
+
+        ConfigAuthorizeClient(
+            client: _httpClient,
+            authorize: _defaultAuthorize
         );
     }
 
@@ -142,6 +155,49 @@ public class HoyolabHttpClientService
 
         var result = await response.Content
             .ReadFromJsonAsync<Responses.GcgBasicInfo.Response>();
+
+        ThrowIfNotSuccess(result);
+
+        return result.Data!;
+    }
+
+    public async Task<Responses.GcgCardList.Data>
+        GetGcgCardListAsync(
+            string? server = null, // Region, e.g. "os_asia", "os_europe", "os_america"
+            string? roleId = null, // Genshin Impact UID
+            bool needAvatar = true,
+            bool needAction = true,
+            bool needStats = true,
+            int offset = 0,
+            int limit = 5000,
+            HoyolabAuthorize? authorize = null
+        )
+    {
+        var httpClient = _httpClient;
+        if (authorize != null)
+        {
+            httpClient = CreateHttpClient();
+            ConfigAuthorizeClient(httpClient, authorize);
+        }
+
+        var uri = GcgCardListUri;
+        uri = QueryHelpers.AddQueryString(uri, "server", server);
+        uri = QueryHelpers.AddQueryString(uri, "role_id", roleId);
+        uri = QueryHelpers.AddQueryString(uri, "need_avatar", 
+            needAvatar.ToString().ToLowerInvariant());
+        uri = QueryHelpers.AddQueryString(uri, "need_action", 
+            needAction.ToString().ToLowerInvariant());
+        uri = QueryHelpers.AddQueryString(uri, "need_stats", 
+            needStats.ToString().ToLowerInvariant());
+        uri = QueryHelpers.AddQueryString(uri, "offset", offset.ToString());
+        uri = QueryHelpers.AddQueryString(uri, "limit", limit.ToString());
+
+        using var response = await httpClient.GetAsync(uri);
+
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content
+            .ReadFromJsonAsync<Responses.GcgCardList.Response>();
 
         ThrowIfNotSuccess(result);
 
@@ -333,7 +389,7 @@ public class HoyolabHttpClientService
                 Validate: resultBuilder.Build()
             );
         }
-        
+
         return new Responses.DecodeCardCode.Result(
             Validate: resultBuilder.Build(),
             Data: result.Data!
@@ -387,7 +443,7 @@ public class HoyolabHttpClientService
         return $"ltuid_v2={authorize.HoyolabUserId}; ltoken_v2={authorize.Token}";
     }
 
-    public static void ConfigAuthorizeClient(
+    private static void ConfigAuthorizeClient(
         HttpClient client,
         HoyolabAuthorize authorize
     )

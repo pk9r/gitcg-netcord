@@ -12,5 +12,11 @@ public static class HoyolabGcgModule
             description: "Show Genshin Impact TCG information.",
             handler: TcgSlashCommand.ExecuteAsync
         );
+        
+        host.AddSlashCommand(
+            name: "card",
+            description: "Show Genshin Impact TCG card information.",
+            handler: CardSlashCommand.ExecuteAsync
+        );
     }
 }
