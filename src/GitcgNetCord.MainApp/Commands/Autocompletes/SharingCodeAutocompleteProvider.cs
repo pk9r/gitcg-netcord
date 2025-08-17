@@ -139,6 +139,13 @@ public class SharingCodeAutocompleteProvider(
                 return;
             }
 
+            suggestions.Add(
+                new ApplicationCommandOptionChoiceProperties(
+                    name: "Select decks from your account",
+                    stringValue: "account-decks"
+                )
+            );
+
             suggestions.AddRange(
                 deckListResult.DeckList.Select(CreateSuggestion)
                     .Where(x => StartsWith(x.Name, keyword) || Contains(x.Name, keyword))
