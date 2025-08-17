@@ -1,10 +1,13 @@
 ﻿using System.Collections.Immutable;
+using System.Text;
 using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Commands.Interactions;
+using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Enums;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgPainter.ImageCreators.Deck;
 using GitcgPainter.ImageCreators.Deck.Abstractions;
+using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -51,6 +54,13 @@ public static class DeckSlashCommand
         {
             await HoyolabAccountsSlashCommand
                 .ExecuteAsync(serviceProvider, context);
+
+            return;
+        }
+
+        if (sharingCode == "account-decks")
+        {
+            await ExecuteAccountDecksAsync(serviceProvider, context);
 
             return;
         }
@@ -146,5 +156,78 @@ public static class DeckSlashCommand
         {
             throw new NotImplementedException();
         }
+    }
+
+    private static async Task ExecuteAccountDecksAsync(
+        IServiceProvider serviceProvider,
+        ApplicationCommandContext context
+    )
+    {
+        var hoyolab = serviceProvider
+            .GetRequiredService<HoyolabHttpClientService>();
+        var deckAccountService = serviceProvider
+            .GetRequiredService<HoyolabDeckAccountService>();
+        var activeHoyolabAccountService = serviceProvider
+            .GetRequiredService<ActiveHoyolabAccountService>();
+
+        await context.Interaction.SendResponseAsync(
+            callback: InteractionCallback.DeferredMessage(MessageFlags.Ephemeral)
+        );
+
+        var hoyolabAccount = await activeHoyolabAccountService
+            .GetActiveHoyolabAccountAsync(
+                discordUserId: context.User.Id
+            );
+
+        if (hoyolabAccount == null)
+            return;
+
+        var authorize = new HoyolabAuthorize(
+            HoyolabUserId: hoyolabAccount.HoyolabUserId,
+            Token: hoyolabAccount.Token
+        );
+
+        var deckListResult = await deckAccountService
+            .GetDeckListAsync(
+                authorize: authorize,
+                hoyolabAccount.GameRoleId,
+                hoyolabAccount.Region
+            );
+
+        var appEmojis = await context.Client.Rest
+            .GetApplicationEmojisAsync(context.Client.Id);
+        var emojis = appEmojis.ToImmutableDictionary(x => x.Name);
+
+        await context.Interaction.ModifyResponseAsync(message => message
+            .AddComponents(
+                new StringMenuProperties(
+                    customId: SelectDecksComponentInteraction.CustomId
+                ).AddOptions(
+                    deckListResult.DeckList.Select((deck, index) =>
+                    {
+                        var rolesDisplay = string.Join(
+                            separator: ", ",
+                            deck.AvatarCards.Select(y => y.Name)
+                        );
+
+                        var emoji = EmojiProperties.Custom(
+                            emojis[deck.AvatarCards.First().Id.ToString()].Id);
+
+                        return new StringMenuSelectOptionProperties(
+                            label: LimitLength($"{index + 1}. {deck.Name}"),
+                            value: deck.ShareCode
+                        )
+                        .WithDescription(LimitLength(rolesDisplay))
+                        .WithEmoji(emoji);
+                    })
+                )
+                .WithMaxValues(Math.Min(deckListResult.DeckList.Count, 25))
+            )
+        );
+    }
+
+    static string LimitLength(ReadOnlySpan<char> name)
+    {
+        return $"{name[..97]}...";
     }
 }
