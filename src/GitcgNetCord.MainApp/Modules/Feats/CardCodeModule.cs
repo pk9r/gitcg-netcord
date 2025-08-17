@@ -1,5 +1,6 @@
 ﻿using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Commands.Slash;
+using NetCord;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
@@ -13,7 +14,13 @@ public static class CardCodeModule
         host.AddSlashCommand(
             name: "deck",
             description: "View cards from deck sharing code.",
-            handler: DeckSlashCommand.ExecuteAsync
+            handler: DeckSlashCommand.ExecuteAsync,
+            contexts:
+            [
+                InteractionContextType.Guild,
+                InteractionContextType.BotDMChannel,
+                InteractionContextType.DMChannel
+            ]
         );
 
         host.AddComponentInteraction<ButtonInteractionContext>(
