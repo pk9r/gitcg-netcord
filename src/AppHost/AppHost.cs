@@ -15,10 +15,10 @@ var useRemotePostgres = builder.Configuration
 
 if (useRemotePostgres)
 {
-    var postgresConnectionString = builder
+    var gitcgnetcorddbConnectionString = builder
         .AddConnectionString("gitcgnetcorddb");
 
-    main.WithReference(postgresConnectionString);
+    main.WithReference(gitcgnetcorddbConnectionString);
 }
 else
 {
@@ -35,8 +35,11 @@ else
     postgres
         .WithDataVolume()
         .WithPgAdmin();
+
+    var gitcgnetcorddb = postgres
+        .AddDatabase("gitcgnetcord");
     
-    main.WithReference(postgres).WaitFor(postgres);
+    main.WithReference(gitcgnetcorddb).WaitFor(gitcgnetcorddb);
 }
 
 builder.Build().Run();
