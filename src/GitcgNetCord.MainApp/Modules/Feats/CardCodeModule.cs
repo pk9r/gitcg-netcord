@@ -27,6 +27,5 @@ public static class CardCodeModule
             customId: CopySharingCodeComponentInteraction.BaseCustomId,
             handler: CopySharingCodeComponentInteraction.ExecuteAsync
         );
-        
     }
 }

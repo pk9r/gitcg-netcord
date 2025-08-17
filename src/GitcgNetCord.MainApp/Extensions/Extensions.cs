@@ -23,6 +23,7 @@ public static class Extensions
     {
         // Feature modules
         host.AddCardCodeModule();
+        host.AddDuelModule();
         host.AddHoyolabAccountModule();
         host.AddHoyolabGcgModule();
 
