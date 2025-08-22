@@ -51,21 +51,21 @@ public static class CardSlashCommand
 
             var accountCommand = commands
                 .First(x => x.Name == "hoyolab-accounts");
-            
+
             await context.Interaction.ModifyResponseAsync(message =>
             {
                 message.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
                     .WithDescription(
                         $"""
-                        You don't have an active Hoyolab account.
-                        Please use the command {accountCommand} to set one up.
-                        """
+                         You don't have an active Hoyolab account.
+                         Please use the command {accountCommand} to set one up.
+                         """
                     )
                     .WithColor(new NetCord.Color(Color.Red.ToArgb()))
                 );
             });
-            
+
             return;
         }
 
@@ -103,7 +103,7 @@ public static class CardSlashCommand
             .GetApplicationEmojisAsync(context.Client.Id);
         var emojis = appEmojis.ToImmutableDictionary(x => x.Name);
 
-        var winRate = data.CardList
+        var characters = data.CardList
             .Where(x => x is
                         {
                             CardType: "CardTypeCharacter",
@@ -111,6 +111,13 @@ public static class CardSlashCommand
                         }
                         && x.UseCount > minUseCount
             )
+            .ToImmutableArray();
+
+        var gameCount = characters.Sum(x => x.UseCount) / 3;
+        var winCount = characters.Sum(x => x.Proficiency) / 3;
+        var winRate = (float)winCount / gameCount;
+        
+        var winRateList = characters
             .Select(x => new
             {
                 x.Id, x.Name, x.Proficiency, x.UseCount,
@@ -119,11 +126,11 @@ public static class CardSlashCommand
             .OrderByDescending(x => x.WinRate)
             .ToImmutableArray();
 
-        var bestWinRate = winRate
+        var bestWinRate = winRateList
             .Take(topWinRateCount)
             .ToImmutableArray();
 
-        var lowestWinRate = winRate
+        var lowestWinRate = winRateList
             .TakeLast(topWinRateCount)
             .Reverse()
             .ToImmutableArray();
@@ -200,6 +207,8 @@ public static class CardSlashCommand
                         .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
                         .WithTitle($"{data.Stats.Nickname}")
                         .AddFields(
+                            new EmbedFieldProperties()
+                                .WithName($"Win rate {winRate:P2} ({winCount}/{gameCount})"),
                             new EmbedFieldProperties()
                                 .WithName("Best win rate")
                                 .WithValue(bestWinRateStringBuilder.ToString())
