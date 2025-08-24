@@ -111,6 +111,7 @@ public static class CardSlashCommand
                         }
                         && x.UseCount > minUseCount
             )
+            .OrderByDescending(x => x.UseCount)
             .ToImmutableArray();
 
         var gameCount = characters.Sum(x => x.UseCount) / 3;
@@ -135,13 +136,11 @@ public static class CardSlashCommand
             .Reverse()
             .ToImmutableArray();
 
-        var topCharacterUseCounts = data.CardList
-            .Where(x => x.CardType == "CardTypeCharacter")
+        var topCharacterUseCounts = characters
             .Select(x => new
             {
                 x.Id, x.Name, x.UseCount
             })
-            .OrderByDescending(x => x.UseCount)
             .Take(topUseCount)
             .ToImmutableArray();
 
