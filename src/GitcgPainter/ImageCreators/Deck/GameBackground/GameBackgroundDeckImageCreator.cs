@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using GitcgPainter.Extensions;
 using GitcgPainter.ImageCreators.Deck.Abstractions;
 using HoyolabHttpClient.Models.Interfaces;
-
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -13,8 +13,8 @@ using SixLabors.ImageSharp.Processing;
 namespace GitcgPainter.ImageCreators.Deck.GameBackground;
 
 public class GameBackgroundDeckImageCreator(
-    ImageCacheService imageCacheService)
-        : IDeckImageCreationService
+    ImageCacheService imageCacheService
+) : IDeckImageCreationService
 {
     private const int RoleCardPaddingY = 170;
     private const int RoleCardSpacing = 40;
@@ -34,36 +34,52 @@ public class GameBackgroundDeckImageCreator(
 
     public GameBackgroundDeckImageOptions Options { get; set; } = new();
 
-    public async Task<byte[]> CreateImageAsync(IDeckData deckData)
+    public async Task<Stream> CreateImageAsync(IDeckData deckData)
     {
         using var image = await Utils.LoadBackgroundDeckGameAsync();
 
         var xCenter = image.Width / 2;
 
-        var roleCardsWidth = Utils.CalcRoleCardsWidth(RoleCardSize.Width, RoleCardSpacing);
+        var roleCardsWidth = Utils.CalcRoleCardsWidth(
+            roleCardWidth: RoleCardSize.Width,
+            roleCardSpacing: RoleCardSpacing
+        );
 
-        var xRolesBase = xCenter - roleCardsWidth / 2;
-        var yRolesBase = RoleCardPaddingY;
+        var (xRolesBase, yRolesBase) = (
+            xCenter - roleCardsWidth / 2,
+            RoleCardPaddingY
+        );
 
         var actionCardsWidth =
             ActionCardSize.Width * NColumns +
             ActionCardSpacing * (NColumns - 1);
 
-        var xActionsBase = xCenter - actionCardsWidth / 2;
-        var yActionsBase = ActionCardPaddingY;
+        var (xActionsBase, yActionsBase) = (
+            xCenter - actionCardsWidth / 2,
+            ActionCardPaddingY
+        );
 
         List<Task> drawTasks = [];
-        Point currentPosition;
+        var currentPosition = Point.Empty;
 
         // Draw role cards
-        currentPosition = new Point(xRolesBase, yRolesBase);
+        currentPosition.Offset(xRolesBase, yRolesBase);
         foreach (var roleCard in deckData.RoleCards)
         {
-            drawTasks.Add(LoadAndDrawCardAsync(
-                image, currentPosition, roleCard, RoleCardSize));
+            drawTasks.Add(
+                LoadAndDrawCardAsync(
+                    image: image,
+                    position: currentPosition,
+                    card: roleCard,
+                    size: RoleCardSize
+                )
+            );
 
             // update position
-            currentPosition.Offset(RoleCardSize.Width + RoleCardSpacing, 0);
+            currentPosition.Offset(
+                dx: RoleCardSize.Width + RoleCardSpacing,
+                dy: 0
+            );
         }
 
         // Draw action cards
@@ -72,8 +88,14 @@ public class GameBackgroundDeckImageCreator(
         currentPosition = new Point(xActionsBase, yActionsBase);
         foreach (var actionCard in deckData.ActionCards)
         {
-            drawTasks.Add(LoadAndDrawCardAsync(
-                image, currentPosition, actionCard, ActionCardSize));
+            drawTasks.Add(
+                LoadAndDrawCardAsync(
+                    image: image,
+                    position: currentPosition,
+                    card: actionCard,
+                    size: ActionCardSize
+                )
+            );
 
             // update position
             actionCardIndex++;
@@ -88,7 +110,7 @@ public class GameBackgroundDeckImageCreator(
             }
         }
 
-        if (AuthorFont != null && Options?.Author != null)
+        if (AuthorFont != null && !string.IsNullOrWhiteSpace(Options.Author))
         {
             image.Mutate(context =>
             {
@@ -96,23 +118,25 @@ public class GameBackgroundDeckImageCreator(
                     text: Options.Author,
                     font: AuthorFont,
                     color: Color.White,
-                    location: AuthorLocation);
+                    location: AuthorLocation
+                );
             });
         }
 
         await Task.WhenAll(drawTasks);
 
         // Save image to PNG
-        using var memoryStream = new MemoryStream();
+        var memoryStream = new MemoryStream();
         await image.SaveAsPngAsync(memoryStream);
         memoryStream.Position = 0;
-        var pngBytes = memoryStream.ToArray();
 
-        return pngBytes;
+        return memoryStream;
     }
 
     private async Task LoadAndDrawCardAsync(
-        Image image, Point position, ICardBasic card, Size size)
+        Image image, Point position,
+        ICardBasic card, Size size
+    )
     {
         using var cachedCardImage = await LoadBorderedIconAsync(card, size);
 
@@ -120,7 +144,11 @@ public class GameBackgroundDeckImageCreator(
 
         image.Mutate(ctx =>
         {
-            ctx.DrawImage(cachedCardImage, position, opacity: 1.0f);
+            ctx.DrawImage(
+                foreground: cachedCardImage,
+                backgroundLocation: position,
+                opacity: 1.0f
+            );
         });
     }
 
