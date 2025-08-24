@@ -234,8 +234,7 @@ public static class CardSlashCommand
                             .WithName("Total wins")
                             .WithValue($"{winCount} ({winRate:P2})")
                             .WithInline()
-                    )
-                ,
+                    ),
                 new EmbedProperties()
                     .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
                     .AddFields(
@@ -255,8 +254,7 @@ public static class CardSlashCommand
                                 ? $"with use count > {minUseCountValue} ({minUseCount} total games)."
                                 : $"with use count > {minUseCountValue}.")
                         )
-                    )
-                ,
+                    ),
                 new EmbedProperties()
                     .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
                     .AddFields(
