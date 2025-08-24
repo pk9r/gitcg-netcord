@@ -28,5 +28,9 @@ public static class CardCodeModule
             handler: CopySharingCodeComponentInteraction.ExecuteAsync
         );
         
+        host.AddComponentInteraction<StringMenuInteractionContext>(
+            customId: SelectDecksComponentInteraction.CustomId,
+            handler: SelectDecksComponentInteraction.ExecuteAsync
+        );
     }
 }

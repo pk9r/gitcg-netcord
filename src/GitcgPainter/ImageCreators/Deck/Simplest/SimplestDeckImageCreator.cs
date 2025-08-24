@@ -15,9 +15,11 @@ public class SimplestDeckImageCreator(
     : IDeckImageCreationService
 {
     #region Constants
+
     private const int ImagePadding = 10;
     private const int RoleCardHorizontalGap = 40;
     private const int ActionCardGap = 30;
+
     #endregion
 
     private Size RoleCardSize { get; } = new(150, 257);
@@ -30,12 +32,13 @@ public class SimplestDeckImageCreator(
 
     public SimplestDeckImageOptions Options { get; set; } = new();
 
-    public async Task<byte[]> CreateImageAsync(IDeckData deck)
+    public async Task<Stream> CreateImageAsync(IDeckData deck)
     {
         var actionCardColumns = Options.ActionCardColumns;
         var actionCardRows = (int)Math.Ceiling((double)deck.ActionCards.Count / actionCardColumns);
 
-        var roleCardsWidth = RoleCardSize.Width * Utils.NumberRoleCards + RoleCardHorizontalGap * (Utils.NumberRoleCards - 1);
+        var roleCardsWidth = RoleCardSize.Width * Utils.NumberRoleCards +
+                             RoleCardHorizontalGap * (Utils.NumberRoleCards - 1);
 
         var actionCardsWidth = ActionCardSize.Width * actionCardColumns + ActionCardGap * (actionCardColumns - 1);
         var actionCardsHeight = ActionCardSize.Height * actionCardRows + ActionCardGap * (actionCardRows - 1);
@@ -60,12 +63,14 @@ public class SimplestDeckImageCreator(
         image.Mutate(ctx => ctx.BackgroundColor(backgroundColorResult));
 
         // Draw role cards
-        var roleCardsX = widthImage / 2 - roleCardsWidth / 2;
-        var roleCardsY = ImagePadding;
+        var (roleCardsX, roleCardsY) = (
+            widthImage / 2 - roleCardsWidth / 2, 
+            ImagePadding
+        );
 
-        Point currentPosition;
+        var currentPosition = Point.Empty;
 
-        currentPosition = new Point(roleCardsX, roleCardsY);
+        currentPosition.Offset(roleCardsX, roleCardsY);
         foreach (var roleCard in deck.RoleCards)
         {
             using var cardImage = await _imageCacheService.LoadBorderedIconAsync(roleCard);
@@ -87,33 +92,40 @@ public class SimplestDeckImageCreator(
         currentPosition = ActionCardsPosition;
         foreach (var actionCard in deck.ActionCards)
         {
-            using var cardImage = await _imageCacheService.LoadBorderedIconAsync(actionCard);
-            if (cardImage is not null)
-            {
-                cardImage.Mutate(context => context.Resize(ActionCardSize));
+            using var cardImage = await _imageCacheService
+                .LoadBorderedIconAsync(actionCard);
+            cardImage.Mutate(context => context.Resize(ActionCardSize));
 
-                image.Mutate(ctx => ctx
-                    .DrawImage(cardImage, currentPosition, opacity: 1.0f));
-            }
+            image.Mutate(ctx => ctx.DrawImage(
+                foreground: cardImage,
+                backgroundLocation: currentPosition,
+                opacity: 1.0f)
+            );
 
             index++;
-            if (index % actionCardColumns == 0)
+            if (index % actionCardColumns != 0)
             {
-                currentPosition.Offset(0, ActionCardSize.Height + ActionCardGap);
-                currentPosition.X = ActionCardsPosition.X;
+                currentPosition.Offset(
+                    dx: ActionCardSize.Width + ActionCardGap,
+                    dy: 0
+                );
             }
             else
             {
-                currentPosition.Offset(ActionCardSize.Width + ActionCardGap, 0);
+                currentPosition.X = 0;
+
+                currentPosition.Offset(
+                    dx: ActionCardsPosition.X,
+                    dy: ActionCardSize.Height + ActionCardGap
+                );
             }
         }
 
         // Save image to PNG
-        using var memoryStream = new MemoryStream();
+        var memoryStream = new MemoryStream();
         await image.SaveAsPngAsync(memoryStream);
         memoryStream.Position = 0;
-        var pngBytes = memoryStream.ToArray();
 
-        return pngBytes;
+        return memoryStream;
     }
 }
