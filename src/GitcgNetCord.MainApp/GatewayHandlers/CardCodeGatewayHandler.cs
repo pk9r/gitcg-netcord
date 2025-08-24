@@ -132,8 +132,7 @@ public partial class CardCodeGatewayHandler(
             labelBuilder.Append($"{deckEmojisString} - {roleCardString}");
             var label = labelBuilder.ToString();
 
-            var bytes = await deckImageCreator.CreateImageAsync(deck);
-            using var memoryStream = new MemoryStream(bytes);
+            await using var stream = await deckImageCreator.CreateImageAsync(deck);
 
             var deckMessage = new MessageProperties();
             if (count == 1)
@@ -149,7 +148,7 @@ public partial class CardCodeGatewayHandler(
                 message: deckMessage
                     .AddAttachments(new AttachmentProperties(
                         fileName: fileName,
-                        stream: memoryStream
+                        stream: stream
                     ))
                     .AddEmbeds(new EmbedProperties()
                         .WithTitle(label)

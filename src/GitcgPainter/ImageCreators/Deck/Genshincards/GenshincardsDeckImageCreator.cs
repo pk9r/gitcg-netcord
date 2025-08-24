@@ -18,7 +18,8 @@ using SixLabors.ImageSharp.Processing;
 namespace GitcgPainter.ImageCreators.Deck.Genshincards;
 
 public class GenshincardsDeckImageCreator(
-    ImageCacheService imageCacheService) : IDeckImageCreationService
+    ImageCacheService imageCacheService
+) : IDeckImageCreationService
 {
     private static readonly Size RoleCardSize = new(128, 128);
     private static readonly Size ActionCardCroppedSize = new(420, 720 / 10);
@@ -60,10 +61,10 @@ public class GenshincardsDeckImageCreator(
 
     public GenshincardsDeckImageOptions Options { get; set; } = new();
 
-    Task<byte[]> IDeckImageCreationService.CreateImageAsync(IDeckData deckData)
+    Task<Stream> IDeckImageCreationService.CreateImageAsync(IDeckData deckData)
         => CreateImageAsync(deckData);
 
-    public async Task<byte[]> CreateImageAsync(
+    public async Task<Stream> CreateImageAsync(
         params IEnumerable<IDeckData> inputDecks)
     {
         var decks = inputDecks.ToArray();
@@ -143,6 +144,7 @@ public class GenshincardsDeckImageCreator(
 
                 currentPosition.Offset(0, ActionCardCroppedSize.Height + ActionCardSpacing);
             }
+
             ;
 
             if (currentPosition.Y > maxY)
@@ -158,12 +160,11 @@ public class GenshincardsDeckImageCreator(
         image.Mutate(ctx => ctx.Crop(imageWidth, imageHeight));
 
         // Save image to PNG
-        using var memoryStream = new MemoryStream();
+        var memoryStream = new MemoryStream();
         await image.SaveAsPngAsync(memoryStream);
         memoryStream.Position = 0;
-        var pngBytes = memoryStream.ToArray();
 
-        return pngBytes;
+        return memoryStream;
     }
 
     private async Task LoadAndDrawRoleCardAsync(
@@ -174,10 +175,7 @@ public class GenshincardsDeckImageCreator(
 
         cardImage.Mutate(ctx => ctx.Resize(RoleCardSize));
 
-        image.Mutate(ctx =>
-        {
-            ctx.DrawImage(cardImage, position, opacity: 1.0f);
-        });
+        image.Mutate(ctx => { ctx.DrawImage(cardImage, position, opacity: 1.0f); });
     }
 
     private async Task LoadAndDrawActionCardAsync(
@@ -189,7 +187,7 @@ public class GenshincardsDeckImageCreator(
 
         // Draw card image
         var cardNamePosition = position +
-            new Size(ActionCardNameOffsetX, ActionCardCenterOffsetY);
+                               new Size(ActionCardNameOffsetX, ActionCardCenterOffsetY);
 
         var cardNameTextOptions = new RichTextOptions(ActionCardNameFont)
         {
@@ -202,7 +200,7 @@ public class GenshincardsDeckImageCreator(
         image.Mutate(ctx =>
         {
             ctx.DrawImage(cardImage, position, opacity: 1.0f)
-               .DrawText(cardNameTextOptions,
+                .DrawText(cardNameTextOptions,
                     text: actionCard.Basic.Name,
                     color: Color.White);
         });
@@ -251,9 +249,9 @@ public class GenshincardsDeckImageCreator(
             const int IconsWidth = SkillElementSize * 2 + 3;
 
             var skillElementPosition = skillValuePosition +
-                new Size(8 - (IconsWidth / 2), SkillValueFontSize);
+                                       new Size(8 - (IconsWidth / 2), SkillValueFontSize);
             var skillElementPosition2 = skillElementPosition +
-                new Size(SkillElementSize, 0);
+                                        new Size(SkillElementSize, 0);
 
             using var elementIcon2 = await skillElement2.LoadElementIconAsync();
             elementIcon2.Mutate(x => x.Resize(SkillElementSize, SkillElementSize));
@@ -271,7 +269,7 @@ public class GenshincardsDeckImageCreator(
         else
         {
             var skillValueElementIconPosition = skillValuePosition +
-                new Size(-3, SkillValueFontSize);
+                                                new Size(-3, SkillValueFontSize);
 
             image.Mutate(ctx => ctx
                 .DrawImage(
@@ -282,7 +280,7 @@ public class GenshincardsDeckImageCreator(
 
         // Draw quantity
         var quantityPosition = position +
-            new Size(QuantityOffsetX, ActionCardCenterOffsetY);
+                               new Size(QuantityOffsetX, ActionCardCenterOffsetY);
 
         var quantityTextOptions = new RichTextOptions(QuantityFont)
         {
@@ -293,9 +291,9 @@ public class GenshincardsDeckImageCreator(
         image.Mutate(ctx =>
         {
             ctx.DrawText(quantityTextOptions,
-                    text: $"×{quantity}",
-                    brush: Brushes.Solid(Color.White),
-                    pen: Pens.Solid(Color.Black, width: 1.0f));
+                text: $"×{quantity}",
+                brush: Brushes.Solid(Color.White),
+                pen: Pens.Solid(Color.Black, width: 1.0f));
         });
     }
 
@@ -350,7 +348,6 @@ public class GenshincardsDeckImageCreator(
             }
 
             nextActionCard = actionCards[actionCardIndex + quantity];
-
         } while (nextActionCard.Basic.ItemId == actionCardId);
 
         return quantity;

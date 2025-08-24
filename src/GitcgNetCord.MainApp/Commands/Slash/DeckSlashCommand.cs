@@ -50,23 +50,19 @@ public static class DeckSlashCommand
         string lang = "en-us"
     )
     {
-        if (sharingCode == "hoyolab-accounts")
+        switch (sharingCode)
         {
-            await HoyolabAccountsSlashCommand
-                .ExecuteAsync(serviceProvider, context);
-
-            return;
-        }
-
-        if (sharingCode == "account-decks")
-        {
-            await ExecuteAccountDecksAsync(serviceProvider, context);
-
-            return;
+            case "hoyolab-accounts":
+                await HoyolabAccountsSlashCommand
+                    .ExecuteAsync(serviceProvider, context);
+                return;
+            case "account-decks":
+                await ExecuteAccountDecksAsync(serviceProvider, context);
+                return;
         }
 
         await context.Interaction.SendResponseAsync(
-            callback: InteractionCallback.DeferredMessage()
+            callback: InteractionCallback.DeferredMessage(MessageFlags.IsComponentsV2)
         );
 
         var decodeResult = await decoder.DecodeAsync(
@@ -105,8 +101,6 @@ public static class DeckSlashCommand
             values: deck.RoleCards.Select(x => x.Basic.Name)
         );
 
-        var label = $"{deckEmojisString} - {roleCardsString}";
-
         if (type.IsCreateImageType())
         {
             IDeckImageCreationService deckImageCreator = type switch
@@ -120,33 +114,41 @@ public static class DeckSlashCommand
                 _ => throw new NotImplementedException()
             };
 
-            var pngBytes = await deckImageCreator.CreateImageAsync(deck);
+            await using var stream = await deckImageCreator.CreateImageAsync(deck);
 
             const string deckImageFileName = "deck.png";
             const string deckImageUrl = $"attachment://{deckImageFileName}";
 
-            using var memoryStream = new MemoryStream(pngBytes);
-
             await context.Interaction.ModifyResponseAsync(message => message
-                .AddAttachments(
-                    new AttachmentProperties(
-                        fileName: deckImageFileName,
-                        stream: memoryStream)
-                )
-                .AddEmbeds(new EmbedProperties()
-                    .WithTitle(label)
-                    .AddFields(
-                        new EmbedFieldProperties()
-                            .WithName("Sharing code")
-                            .WithValue(sharingCode)
-                    )
-                    .WithImage(new EmbedImageProperties(deckImageUrl))
-                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
-                )
-                .AddComponents(new ActionRowProperties().AddButtons(
-                    CopySharingCodeComponentInteraction
-                        .CreateCopySharingCodeButton(sharingCode)
+                .WithFlags(MessageFlags.IsComponentsV2)
+                .AddAttachments(new AttachmentProperties(
+                    fileName: deckImageFileName,
+                    stream: stream
                 ))
+                .AddComponents(
+                    [
+                        new ComponentContainerProperties()
+                            .WithAccentColor(new NetCord.Color(Color.Purple.ToArgb()))
+                            .AddComponents(
+                                new TextDisplayProperties(
+                                    $"""
+                                     ## {deckEmojisString} - {roleCardsString}
+                                     """
+                                ),
+                                new MediaGalleryProperties().AddItems(
+                                    new MediaGalleryItemProperties(
+                                        new ComponentMediaProperties(deckImageUrl))
+                                ),
+                                new TextDisplayProperties(
+                                    $"`{sharingCode}`"
+                                ),
+                                new ActionRowProperties([
+                                    CopySharingCodeComponentInteraction
+                                        .CreateCopySharingCodeButton(sharingCode)
+                                ])
+                            )
+                    ]
+                )
             );
 
             return;
@@ -201,33 +203,33 @@ public static class DeckSlashCommand
         await context.Interaction.ModifyResponseAsync(message => message
             .AddComponents(
                 new StringMenuProperties(
-                    customId: SelectDecksComponentInteraction.CustomId
-                ).AddOptions(
-                    deckListResult.DeckList.Select((deck, index) =>
-                    {
-                        var rolesDisplay = string.Join(
-                            separator: ", ",
-                            deck.AvatarCards.Select(y => y.Name)
-                        );
+                        customId: SelectDecksComponentInteraction.CustomId
+                    ).AddOptions(
+                        deckListResult.DeckList.Select((deck, index) =>
+                        {
+                            var rolesDisplay = string.Join(
+                                separator: ", ",
+                                deck.AvatarCards.Select(y => y.Name)
+                            );
 
-                        var emoji = EmojiProperties.Custom(
-                            emojis[deck.AvatarCards.First().Id.ToString()].Id);
+                            var emoji = EmojiProperties.Custom(
+                                emojis[deck.AvatarCards.First().Id.ToString()].Id);
 
-                        return new StringMenuSelectOptionProperties(
-                            label: LimitLength($"{index + 1}. {deck.Name}"),
-                            value: deck.ShareCode
-                        )
-                        .WithDescription(LimitLength(rolesDisplay))
-                        .WithEmoji(emoji);
-                    })
-                )
-                .WithMaxValues(Math.Min(deckListResult.DeckList.Count, 25))
+                            return new StringMenuSelectOptionProperties(
+                                    label: LimitLength($"{index + 1}. {deck.Name}"),
+                                    value: deck.ShareCode
+                                )
+                                .WithDescription(LimitLength(rolesDisplay))
+                                .WithEmoji(emoji);
+                        })
+                    )
+                    .WithMaxValues(Math.Min(deckListResult.DeckList.Count, 5))
             )
         );
     }
 
-    static string LimitLength(ReadOnlySpan<char> name)
+    private static string LimitLength(ReadOnlySpan<char> name)
     {
-        return $"{name[..97]}...";
+        return name.Length <= 100 ? name.ToString() : $"{name[..97]}...";
     }
 }
