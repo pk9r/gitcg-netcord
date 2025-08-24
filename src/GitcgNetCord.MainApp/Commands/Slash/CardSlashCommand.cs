@@ -16,10 +16,10 @@ public static class CardSlashCommand
         ApplicationCommandContext context,
         [
             SlashCommandParameter(
-                Description = "Minimum use count for a card to be considered. Default: 10."
+                Description = "Minimum use count for a card to be considered. Default: 1%."
             )
         ]
-        int minUseCount = 10,
+        string minUseCount = "1%",
         [
             SlashCommandParameter(
                 Description = "Number of top win rates to display. Default: 5."
@@ -104,44 +104,59 @@ public static class CardSlashCommand
         var emojis = appEmojis.ToImmutableDictionary(x => x.Name);
 
         var characters = data.CardList
-            .Where(x => x is
-                        {
-                            CardType: "CardTypeCharacter",
-                            UseCount: > 0
-                        }
-                        && x.UseCount > minUseCount
-            )
+            .Where(x => x is { CardType: "CardTypeCharacter" })
             .ToImmutableArray();
 
         var gameCount = characters.Sum(x => x.UseCount) / 3;
         var winCount = characters.Sum(x => x.Proficiency) / 3;
         var winRate = (float)winCount / gameCount;
-        
+
+        var minUseCountValue = 0;
+        var isPercent = minUseCount.EndsWith('%');
+        if (isPercent)
+        {
+            if (float.TryParse(
+                    minUseCount.AsSpan(0, minUseCount.Length - 1),
+                    out var percent
+                ))
+            {
+                minUseCountValue = (int)(gameCount * percent / 100);
+            }
+        }
+        else
+        {
+            if (!int.TryParse(minUseCount, out minUseCountValue))
+            {
+            }
+        }
+
         var winRateList = characters
             .Select(x => new
             {
                 x.Id, x.Name, x.Proficiency, x.UseCount,
                 WinRate = (float)x.Proficiency / x.UseCount
             })
-            .OrderByDescending(x => x.WinRate)
+            .Where(x => x.UseCount > minUseCountValue)
             .ToImmutableArray();
 
         var bestWinRate = winRateList
+            .OrderByDescending(x => x.WinRate)
+            .ThenByDescending(x => x.UseCount)
             .Take(topWinRateCount)
             .ToImmutableArray();
 
         var lowestWinRate = winRateList
-            .TakeLast(topWinRateCount)
-            .Reverse()
+            .OrderBy(x => x.WinRate)
+            .ThenByDescending(x => x.UseCount)
+            .Take(topWinRateCount)
             .ToImmutableArray();
 
-        var topCharacterUseCounts = data.CardList
-            .Where(x => x.CardType == "CardTypeCharacter")
+        var topCharacterUseCounts = characters
+            .OrderByDescending(x => x.UseCount)
             .Select(x => new
             {
                 x.Id, x.Name, x.UseCount
             })
-            .OrderByDescending(x => x.UseCount)
             .Take(topUseCount)
             .ToImmutableArray();
 
@@ -203,36 +218,58 @@ public static class CardSlashCommand
         await context.Interaction.ModifyResponseAsync(message =>
         {
             message.AddEmbeds(
-                    new EmbedProperties()
-                        .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
-                        .WithTitle($"{data.Stats.Nickname}")
-                        .AddFields(
-                            new EmbedFieldProperties()
-                                .WithName($"Win rate {winRate:P2} ({winCount}/{gameCount})"),
-                            new EmbedFieldProperties()
-                                .WithName("Best win rate")
-                                .WithValue(bestWinRateStringBuilder.ToString())
-                                .WithInline(),
-                            new EmbedFieldProperties()
-                                .WithName("Lowest win rate")
-                                .WithValue(lowestWinRateStringBuilder.ToString())
-                                .WithInline()
+                new EmbedProperties()
+                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .WithTitle($"{data.Stats.Nickname}")
+                    .AddFields(
+                        new EmbedFieldProperties()
+                            .WithName("UID")
+                            .WithValue($"{uid}")
+                            .WithInline(),
+                        new EmbedFieldProperties()
+                            .WithName("Total games")
+                            .WithValue($"{gameCount}")
+                            .WithInline(),
+                        new EmbedFieldProperties()
+                            .WithName("Total wins")
+                            .WithValue($"{winCount} ({winRate:P2})")
+                            .WithInline()
+                    )
+                ,
+                new EmbedProperties()
+                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .AddFields(
+                        new EmbedFieldProperties()
+                            .WithName("Best win rate")
+                            .WithValue(bestWinRateStringBuilder.ToString())
+                            .WithInline(),
+                        new EmbedFieldProperties()
+                            .WithName("Lowest win rate")
+                            .WithValue(lowestWinRateStringBuilder.ToString())
+                            .WithInline()
+                    )
+                    .WithFooter(new EmbedFooterProperties()
+                        .WithText(
+                            "Win rate stats only include cards " +
+                            (isPercent
+                                ? $"with use count > {minUseCountValue} ({minUseCount} total games)."
+                                : $"with use count > {minUseCountValue}.")
                         )
-                )
-                .AddEmbeds(
-                    new EmbedProperties()
-                        .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
-                        .AddFields(
-                            new EmbedFieldProperties()
-                                .WithName("Top character use counts")
-                                .WithValue(topUseCountsStringBuilder.ToString())
-                                .WithInline(),
-                            new EmbedFieldProperties()
-                                .WithName("Top action use counts")
-                                .WithValue(topActionUseCountsStringBuilder.ToString())
-                                .WithInline()
-                        )
-                );
+                    )
+                ,
+                new EmbedProperties()
+                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .AddFields(
+                        new EmbedFieldProperties()
+                            .WithName("Top use count characters")
+                            .WithValue(topUseCountsStringBuilder.ToString())
+                            .WithInline(),
+                        new EmbedFieldProperties()
+                            .WithName("Top use count actions")
+                            .WithValue(topActionUseCountsStringBuilder.ToString())
+                            .WithInline()
+                    )
+            );
         });
     }
 }
