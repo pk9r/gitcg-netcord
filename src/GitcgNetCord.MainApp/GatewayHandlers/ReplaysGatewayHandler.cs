@@ -23,8 +23,7 @@ public class ReplaysGatewayHandler(
 
         var content = message.Content;
 
-        var uid = content;
-        var server = GetHoyolabServer(content);
+        var server = GetHoyolabServer(uid: content);
 
         var greenColor = new NetCord.Color(Color.Green.ToArgb());
         var redColor = new NetCord.Color(Color.Red.ToArgb());
@@ -34,7 +33,7 @@ public class ReplaysGatewayHandler(
         try
         {
             info = await gcgBasicInfoService
-                .GetGcgBasicInfoAsync(server, uid);
+                .GetGcgBasicInfoAsync(server, content);
         }
         catch
         {

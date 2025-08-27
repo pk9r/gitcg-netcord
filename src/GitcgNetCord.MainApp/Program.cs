@@ -3,12 +3,15 @@ using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
 using HoyolabHttpClient.Extensions;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,15 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddHybridCache();
 
 builder.AddNpgsqlDbContext<AppDbContext>("gitcgnetcorddb");
+
+builder.Services.AddHttpClient<IChatCompletionService>()
+    .ConfigureHttpClient(o => o.Timeout = Timeout.InfiniteTimeSpan);
+
+builder.Services.AddOpenAIChatCompletion(
+    modelId: builder.Configuration["DuelAssistantOptions:ModelId"]!,
+    apiKey: builder.Configuration["DuelAssistantOptions:ApiKey"]!,
+    endpoint: new Uri(builder.Configuration["DuelAssistantOptions:EndpointUrl"]!)
+);
 
 builder.Services.AddNetCordServices();
 builder.Services.AddHoyolabServices();
