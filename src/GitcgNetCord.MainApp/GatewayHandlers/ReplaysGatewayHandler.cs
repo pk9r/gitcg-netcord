@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Drawing;
+using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -26,8 +27,8 @@ public class ReplaysGatewayHandler(
         var uid = content;
         var server = GetHoyolabServer(content);
 
-        var greenColor = new NetCord.Color(Color.Green.ToArgb());
-        var redColor = new NetCord.Color(Color.Red.ToArgb());
+        var greenColor = Color.Green.ToNetCordColor();
+        var redColor = Color.Red.ToNetCordColor();
 
         HoyolabHttpClient.Responses.GcgBasicInfo.Data info;
 

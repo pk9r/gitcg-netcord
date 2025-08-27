@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Drawing;
 using System.Text;
 using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using HoyolabHttpClient;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -62,7 +63,7 @@ public static class CardSlashCommand
                          Please use the command {accountCommand} to set one up.
                          """
                     )
-                    .WithColor(new NetCord.Color(Color.Red.ToArgb()))
+                    .WithColor(Color.Red.ToNetCordColor())
                 );
             });
 
@@ -93,7 +94,7 @@ public static class CardSlashCommand
                 message.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
                     .WithDescription(e.Message)
-                    .WithColor(new NetCord.Color(Color.Red.ToArgb()))
+                    .WithColor(Color.Red.ToNetCordColor())
                 );
             });
             return;
@@ -219,7 +220,7 @@ public static class CardSlashCommand
         {
             message.AddEmbeds(
                 new EmbedProperties()
-                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .WithColor(Color.Purple.ToNetCordColor())
                     .WithTitle($"{data.Stats.Nickname}")
                     .AddFields(
                         new EmbedFieldProperties()
@@ -236,7 +237,7 @@ public static class CardSlashCommand
                             .WithInline()
                     ),
                 new EmbedProperties()
-                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .WithColor(Color.Purple.ToNetCordColor())
                     .AddFields(
                         new EmbedFieldProperties()
                             .WithName("Best win rate")
@@ -256,7 +257,7 @@ public static class CardSlashCommand
                         )
                     ),
                 new EmbedProperties()
-                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .WithColor(Color.Purple.ToNetCordColor())
                     .AddFields(
                         new EmbedFieldProperties()
                             .WithName("Top use count characters")

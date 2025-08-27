@@ -1,17 +1,18 @@
 ﻿using System.Collections.Immutable;
-using System.Text;
 using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Enums;
+using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
-using GitcgPainter.ImageCreators.Deck;
+using GitcgNetCord.MainApp.Models;
 using GitcgPainter.ImageCreators.Deck.Abstractions;
 using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using Color = System.Drawing.Color;
+using IDeckImageCreationService = GitcgSharp.Shared.ImageCreators.Deck.Abstractions.IDeckImageCreationService;
 
 namespace GitcgNetCord.MainApp.Commands.Slash;
 
@@ -73,11 +74,16 @@ public static class DeckSlashCommand
 
         if (decodeResult.Validate.Failed)
         {
+            var failures = string.Join(
+                separator: '\n',
+                values: decodeResult.Validate.Failures
+            );
+
             await context.Interaction.ModifyResponseAsync(message => message
                 .AddEmbeds(new EmbedProperties()
                     .WithTitle("Invalid sharing code")
-                    .WithDescription(string.Join('\n', decodeResult.Validate.Failures))
-                    .WithColor(new NetCord.Color(Color.Red.ToArgb()))
+                    .WithDescription(failures)
+                    .WithColor(Color.Red.ToNetCordColor())
                 )
             );
             return;
@@ -103,6 +109,7 @@ public static class DeckSlashCommand
 
         if (type.IsCreateImageType())
         {
+            // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
             IDeckImageCreationService deckImageCreator = type switch
             {
                 SharingDecodeType.ImageGameBackground
@@ -111,6 +118,7 @@ public static class DeckSlashCommand
                     => deckImageCreatorCollection.Simplest,
                 SharingDecodeType.ImageGenshincards
                     => deckImageCreatorCollection.Genshincards,
+                // This case should never be hit because of the IsCreateImageType check above.
                 _ => throw new NotImplementedException()
             };
 
@@ -119,6 +127,7 @@ public static class DeckSlashCommand
             const string deckImageFileName = "deck.png";
             const string deckImageUrl = $"attachment://{deckImageFileName}";
 
+            // ReSharper disable once RawStringCanBeSimplified
             await context.Interaction.ModifyResponseAsync(message => message
                 .WithFlags(MessageFlags.IsComponentsV2)
                 .AddAttachments(new AttachmentProperties(
@@ -128,7 +137,7 @@ public static class DeckSlashCommand
                 .AddComponents(
                     [
                         new ComponentContainerProperties()
-                            .WithAccentColor(new NetCord.Color(Color.Purple.ToArgb()))
+                            .WithAccentColor(Color.Purple.ToNetCordColor())
                             .AddComponents(
                                 new TextDisplayProperties(
                                     $"""

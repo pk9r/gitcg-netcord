@@ -4,6 +4,7 @@ using HoyolabHttpClient.Models.Interfaces;
 
 namespace HoyolabHttpClient.Models;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public record Role : ICardBasic
 {
     [JsonPropertyName("basic")]
