@@ -12,6 +12,10 @@ using SixLabors.ImageSharp.Processing;
 
 namespace GitcgPainter.ImageCreators.Deck.GameBackground;
 
+[Obsolete(
+    "This image creator is deprecated. " +
+    "Use GameBackgroundDeckImageCreator from GitcgSkia instead."
+)]
 public class GameBackgroundDeckImageCreator(
     ImageCacheService imageCacheService
 ) : IDeckImageCreationService

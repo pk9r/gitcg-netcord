@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using HoyolabHttpClient;
 using NetCord.Rest;
@@ -63,7 +64,7 @@ public static class TcgSlashCommand
                         Alternatively, you can provide a UID directly.
                         """
                     )
-                    .WithColor(new NetCord.Color(Color.Red.ToArgb()))
+                    .WithColor(Color.Red.ToNetCordColor())
                 );
             });
             
@@ -87,8 +88,8 @@ public static class TcgSlashCommand
 
         server = GetServerValue(server, uid);
 
-        var greenColor = new NetCord.Color(Color.Green.ToArgb());
-        var redColor = new NetCord.Color(Color.Red.ToArgb());
+        var greenColor = Color.Green.ToNetCordColor();
+        var redColor = Color.Red.ToNetCordColor();
 
         HoyolabHttpClient.Responses.GcgBasicInfo.Data info;
 

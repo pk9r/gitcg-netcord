@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="SkiaSharp"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid"/>
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
+        <ProjectReference Include="..\HoyolabHttpClient\HoyolabHttpClient.csproj"/>
+    </ItemGroup>
+
+</Project>
