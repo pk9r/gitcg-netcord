@@ -4,7 +4,7 @@ namespace HoyolabHttpClient.Models.Interfaces;
 
 public interface IDeckData
 {
-    public IReadOnlyList<Role> RoleCards { get; }
+    public IReadOnlyCollection<Role> RoleCards { get; }
 
-    public IReadOnlyList<Action> ActionCards { get; }
+    public IReadOnlyCollection<Action> ActionCards { get; }
 }

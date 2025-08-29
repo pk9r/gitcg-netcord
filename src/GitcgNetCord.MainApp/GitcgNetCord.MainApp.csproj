@@ -25,18 +25,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
     <PackageReference Include="NetCord.Hosting.Services" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SixLabors.ImageSharp">
-      <HintPath>..\..\..\..\.nuget\packages\sixlabors.imagesharp\3.1.11\lib\net6.0\SixLabors.ImageSharp.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Plugins\DeckEditor\" />
   </ItemGroup>
 
 </Project>
