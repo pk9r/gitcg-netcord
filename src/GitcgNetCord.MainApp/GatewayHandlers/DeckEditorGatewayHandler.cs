@@ -53,7 +53,7 @@ public class DeckEditorGatewayHandler(
             - Importing a deck using a sharing code.
             - Sending the current deck image.
             - Updating the deck by adding or removing cards.
-            
+
             Instructions:
             - Sharing code length is fixed at 68 characters.
             - After importing the deck successfully using the sharing code, you can send the deck image to the player.
@@ -61,12 +61,12 @@ public class DeckEditorGatewayHandler(
             - After updating the deck, send the new deck image to the player.
             """
         );
-        //chatHistory.AddSystemMessage(
-        //    """
-        //    Additional instructions:
-        //    - Use Vietnamese to communicate.
-        //    """
-        //);
+        // chatHistory.AddSystemMessage(
+        //     """
+        //     Additional instructions:
+        //     - Use Vietnamese to communicate.
+        //     """
+        // );
         chatHistory.AddUserMessage(message.Content);
 
         var reaction = new ReactionEmojiProperties("⏳");

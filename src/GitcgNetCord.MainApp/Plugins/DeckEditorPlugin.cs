@@ -1,4 +1,7 @@
-﻿using GitcgNetCord.MainApp.Commands.Interactions;
+﻿using System.Collections.Immutable;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Models;
 using HoyolabHttpClient;
@@ -6,9 +9,7 @@ using Microsoft.SemanticKernel;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Rest;
-using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Text.Json.Serialization;
+using Color = System.Drawing.Color;
 
 namespace GitcgNetCord.MainApp.Plugins;
 
@@ -22,16 +23,17 @@ public class DeckEditorPlugin(
 {
     [KernelFunction("import_deck")]
     [Description("Imports a deck using the provided sharing code.")]
+    // ReSharper disable once UnusedMember.Global
     public async Task<ImportDeckResponse> ImportDeckAsync(string sharingCode)
     {
         var result = await hoyolab.DecodeCardCodeAsync(sharingCode);
 
-        deckEditorContext.DeckModel.RoleCards = 
+        deckEditorContext.DeckModel.RoleCards =
             [.. result.Data.RoleCards.Select(x => x.Basic.ItemId)];
         deckEditorContext.DeckModel.ActionCards =
             [.. result.Data.ActionCards.Select(x => x.Basic.ItemId)];
 
-        return new()
+        return new ImportDeckResponse
         {
             Message = "Deck imported successfully.",
             CurrentContext = deckEditorContext
@@ -39,16 +41,21 @@ public class DeckEditorPlugin(
     }
 
     [KernelFunction("send_current_deck_image")]
-    [Description("Sends the current deck image to the user.")]
+    [Description(
+        """
+        Sends the current deck image to the user.
+        Also includes the sharing code in the message.
+        """)]
+    // ReSharper disable once UnusedMember.Global
     public async Task<MessageResponse> SendCurrentDeckImageAsync()
     {
         var deckImageCreator = deckImageCreatorCollection.GameBackground;
 
-        var endcodeResult = await hoyolab.EncodeCardCodeAsync(
+        var encodeResult = await hoyolab.EncodeCardCodeAsync(
             roleCards: deckEditorContext.DeckModel.RoleCards,
             actionCards: deckEditorContext.DeckModel.ActionCards
         );
-        var sharingCode = endcodeResult.Code;
+        var sharingCode = encodeResult.Code;
 
         var decodeResult = await hoyolab.DecodeCardCodeAsync(
             code: sharingCode
@@ -81,37 +88,36 @@ public class DeckEditorPlugin(
         await gitcgGatewayHandlerContext.Message.Channel!.SendMessageAsync(
             new MessageProperties()
                 .WithFlags(MessageFlags.IsComponentsV2)
-                    .AddAttachments(new AttachmentProperties(
-                        fileName: deckImageFileName,
-                        stream: image
-                    ))
-                    .AddComponents(
-                        [
-                            new ComponentContainerProperties()
-                                .WithAccentColor(System.Drawing.Color.Purple.ToNetCordColor())
-                                .AddComponents(
-                                    new TextDisplayProperties(
-                                        $"""
-                                         ## {deckEmojisString} - {roleCardsString}
-                                         """
-                                    ),
-                                    new MediaGalleryProperties().AddItems(
-                                        new MediaGalleryItemProperties(
-                                            new ComponentMediaProperties(deckImageUrl))
-                                    ),
-                                    new TextDisplayProperties(
-                                        $"`{sharingCode}`"
-                                    ),
-                                    new ActionRowProperties([
-                                        CopySharingCodeComponentInteraction
-                                            .CreateCopySharingCodeButton(sharingCode)
-                                    ])
-                                )
-                        ]
-                    )
+                .AddAttachments(new AttachmentProperties(
+                    fileName: deckImageFileName,
+                    stream: image
+                ))
+                .AddComponents([
+                        new ComponentContainerProperties()
+                            .WithAccentColor(Color.Purple.ToNetCordColor())
+                            .AddComponents(
+                                new TextDisplayProperties(
+                                    $"""
+                                     ## {deckEmojisString} - {roleCardsString}
+                                     """
+                                ),
+                                new MediaGalleryProperties().AddItems(
+                                    new MediaGalleryItemProperties(
+                                        new ComponentMediaProperties(deckImageUrl))
+                                ),
+                                new TextDisplayProperties(
+                                    $"`{sharingCode}`"
+                                ),
+                                new ActionRowProperties([
+                                    CopySharingCodeComponentInteraction
+                                        .CreateCopySharingCodeButton(sharingCode)
+                                ])
+                            )
+                    ]
+                )
         );
 
-        return new()
+        return new MessageResponse
         {
             Message = "Deck image sent successfully.",
             CurrentContext = deckEditorContext
@@ -127,7 +133,7 @@ public class DeckEditorPlugin(
         deckEditorContext.DeckModel.RoleCards = deckModel.RoleCards;
         deckEditorContext.DeckModel.ActionCards = deckModel.ActionCards;
 
-        return Task.FromResult<MessageResponse>(new()
+        return Task.FromResult(new MessageResponse
         {
             Message = "Deck updated successfully.",
             CurrentContext = deckEditorContext
@@ -136,6 +142,7 @@ public class DeckEditorPlugin(
 
     [KernelFunction("get_action_cards")]
     [Description("Retrieves the collection of action cards in the current deck.")]
+    // ReSharper disable once UnusedMember.Global
     public async Task<ActionCollectionModel> GetActionCollectionAsync()
     {
         var result = await hoyolab.GetActionsAsync(
@@ -207,7 +214,6 @@ public class MessageResponse : PluginOutputBaseModel
 
 public class ImportDeckResponse : MessageResponse
 {
-    
 }
 
 public class ActionCollectionModel : PluginOutputBaseModel
