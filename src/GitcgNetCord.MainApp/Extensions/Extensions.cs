@@ -64,6 +64,7 @@ public static class Extensions
     {
         services.AddHoyolabHttpClient();
         services.AddSingleton<HoyolabCardRoleService>();
+        services.AddSingleton<HoyolabCardActionService>();
         services.AddSingleton<HoyolabDecoder>();
         services.AddSingleton<HoyolabDeckAccountService>();
         services.AddSingleton<HoyolabGcgBasicInfoService>();
