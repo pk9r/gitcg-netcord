@@ -31,5 +31,17 @@ public static class HoyolabGcgModule
                 InteractionContextType.DMChannel
             ]
         );
+
+        host.AddSlashCommand(
+            name: "tcg-card",
+            description: "Information about a specific Genius Invokation card.",
+            handler: TcgCardSlashCommand.ExecuteAsync,
+            contexts:
+            [
+                InteractionContextType.Guild,
+                InteractionContextType.BotDMChannel,
+                InteractionContextType.DMChannel
+            ]
+        );
     }
 }

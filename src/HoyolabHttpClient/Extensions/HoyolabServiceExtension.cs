@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
-using HoyolabHttpClient.Models;
-using HoyolabHttpClient.Responses.Skills;
+﻿using HoyolabHttpClient.Models;
+using System.Threading.Tasks;
 
 namespace HoyolabHttpClient.Extensions;
 
 public static class HoyolabServiceExtension
 {
-    public static Task<Data>
+    public static Task<Responses.Skills.Data>
         GetRoleSkillAsync(
             this HoyolabHttpClientService hoyolabService,
             Role role,

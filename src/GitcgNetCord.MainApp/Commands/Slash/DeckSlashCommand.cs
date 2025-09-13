@@ -1,16 +1,15 @@
-﻿using System.Collections.Immutable;
-using GitcgNetCord.MainApp.Commands.Autocompletes;
+﻿using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Enums;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Models;
-using GitcgPainter.ImageCreators.Deck.Abstractions;
 using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
+using System.Collections.Immutable;
 using Color = System.Drawing.Color;
 using IDeckImageCreationService = GitcgSharp.Shared.ImageCreators.Deck.Abstractions.IDeckImageCreationService;
 
@@ -63,7 +62,7 @@ public static class DeckSlashCommand
         }
 
         await context.Interaction.SendResponseAsync(
-            callback: InteractionCallback.DeferredMessage(MessageFlags.IsComponentsV2)
+            callback: InteractionCallback.DeferredMessage()
         );
 
         var decodeResult = await decoder.DecodeAsync(
