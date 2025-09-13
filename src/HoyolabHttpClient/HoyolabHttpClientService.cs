@@ -1,4 +1,8 @@
-﻿using System;
+﻿using HoyolabHttpClient.Configuration;
+using HoyolabHttpClient.Responses;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,11 +11,6 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using HoyolabHttpClient.Configuration;
-using HoyolabHttpClient.Responses;
-using HoyolabHttpClient.Responses.WebLoginByPassword;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Options;
 using Data = HoyolabHttpClient.Responses.GcgBasicInfo.Data;
 
 namespace HoyolabHttpClient;
@@ -40,6 +39,7 @@ public class HoyolabHttpClientService
     private const string GcgCardListUri = "event/game_record/genshin/api/gcg/cardList";
 
     private const string RoleSkillUri = "event/cardsquare/role/skill";
+    private const string ActionSkillUri = "event/cardsquare/action/skill";
 
     private const string CardRolesUri = "event/cardsquare/roles";
     private const string CardActionsUri = "event/cardsquare/actions";
@@ -83,7 +83,7 @@ public class HoyolabHttpClientService
     //    return rolesGroupByElement;
     //}
 
-    public async Task<Result>
+    public async Task<Responses.WebLoginByPassword.Result>
         WebLoginByPasswordAsync(string account, string password)
     {
         var httpClient = CreateHttpClient();
@@ -111,7 +111,7 @@ public class HoyolabHttpClientService
         response.EnsureSuccessStatusCode();
 
         var value = await response.Content.ReadFromJsonAsync<
-            Response
+            Responses.WebLoginByPassword.Response
         >();
 
         ThrowIfNotSuccess(value);
@@ -127,7 +127,7 @@ public class HoyolabHttpClientService
 
         var authorize = new HoyolabAuthorize(uid, token);
 
-        return new Result(authorize, value.Data!);
+        return new Responses.WebLoginByPassword.Result(authorize, value.Data!);
     }
 
 
@@ -163,8 +163,8 @@ public class HoyolabHttpClientService
 
     public async Task<Responses.GcgCardList.Data>
         GetGcgCardListAsync(
-            string? server = null, // Region, e.g. "os_asia", "os_europe", "os_america"
-            string? roleId = null, // Genshin Impact UID
+            string server, // Region, e.g. "os_asia", "os_europe", "os_america"
+            string roleId, // Genshin Impact UID
             bool needAvatar = true,
             bool needAction = true,
             bool needStats = true,
@@ -183,11 +183,11 @@ public class HoyolabHttpClientService
         var uri = GcgCardListUri;
         uri = QueryHelpers.AddQueryString(uri, "server", server);
         uri = QueryHelpers.AddQueryString(uri, "role_id", roleId);
-        uri = QueryHelpers.AddQueryString(uri, "need_avatar", 
+        uri = QueryHelpers.AddQueryString(uri, "need_avatar",
             needAvatar.ToString().ToLowerInvariant());
-        uri = QueryHelpers.AddQueryString(uri, "need_action", 
+        uri = QueryHelpers.AddQueryString(uri, "need_action",
             needAction.ToString().ToLowerInvariant());
-        uri = QueryHelpers.AddQueryString(uri, "need_stats", 
+        uri = QueryHelpers.AddQueryString(uri, "need_stats",
             needStats.ToString().ToLowerInvariant());
         uri = QueryHelpers.AddQueryString(uri, "offset", offset.ToString());
         uri = QueryHelpers.AddQueryString(uri, "limit", limit.ToString());
@@ -260,7 +260,7 @@ public class HoyolabHttpClientService
         GetRoleSkillAsync(int id, string lang = "en-us")
     {
         var uri = RoleSkillUri;
-        uri = QueryHelpers.AddQueryString(uri, "id", id.ToString());
+        AddQueryStringToUri(ref uri, "id", id.ToString());
         AddLangQueryToUri(ref uri, lang);
 
         using var response = await _httpClient.GetAsync(uri);
@@ -269,6 +269,25 @@ public class HoyolabHttpClientService
 
         var result = await response.Content
             .ReadFromJsonAsync<Responses.Skills.Response>();
+
+        ThrowIfNotSuccess(result);
+
+        return result.Data!;
+    }
+
+    public async Task<Responses.ActionSkill.Data>
+        GetActionSkillAsync(int id, string lang = "en-us")
+    {
+        var uri = ActionSkillUri;
+        AddQueryStringToUri(ref uri, "id", id.ToString());
+        AddQueryStringToUri(ref uri, "lang", lang);
+
+        using var response = await _httpClient.GetAsync(uri);
+
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content
+            .ReadFromJsonAsync<Responses.ActionSkill.Response>();
 
         ThrowIfNotSuccess(result);
 
@@ -294,7 +313,7 @@ public class HoyolabHttpClientService
     }
 
     public async Task<Responses.CardActions.Data>
-        GetActionsAsync(
+        GetCardActionsAsync(
             IEnumerable<int> roleIds,
             string lang = "en-us"
         )
@@ -396,14 +415,24 @@ public class HoyolabHttpClientService
         );
     }
 
-    private static void AddLangQueryToUri(
-        ref string uri, string lang
+    private static void AddQueryStringToUri(
+        ref string uri,
+        string name,
+        string value
     )
     {
         uri = QueryHelpers.AddQueryString(
             uri: uri,
-            name: "lang", value: lang
+            name: name,
+            value: value
         );
+    }
+
+    private static void AddLangQueryToUri(
+        ref string uri, string lang
+    )
+    {
+        AddQueryStringToUri(ref uri, "lang", lang);
     }
 
     private static void ThrowIfNotSuccess(
