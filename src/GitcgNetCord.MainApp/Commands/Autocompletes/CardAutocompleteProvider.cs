@@ -18,9 +18,14 @@ public class CardAutocompleteProvider(
     {
         var keyword = option.Value!;
 
-        var cardActions = await cardActionService.GetCardActionsAsync("vi-vn");
+        List<HoyolabHttpClient.Responses.CardActions.Data> cardActions = [
+            await cardActionService.GetCardActionsAsync(),
+            await cardActionService.GetCardActionsAsync("vi-vn")
+        ];
 
-        var suggestions = cardActions.Actions
+        var suggestions = cardActions
+            .SelectMany(x => x.Actions)
+            .DistinctBy(x => x.Basic.Name)
             .Where(x => StartsWith(x.Basic.Name, keyword) || Contains(x.Basic.Name, keyword))
             .OrderBy(x => StartsWith(x.Basic.Name, keyword) ? 0 : 1)
             .Select(x => new ApplicationCommandOptionChoiceProperties(x.Basic.Name, x.Basic.ItemId));

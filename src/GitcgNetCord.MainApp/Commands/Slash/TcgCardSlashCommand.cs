@@ -6,6 +6,7 @@ using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using System.Collections.Immutable;
+using System.Text;
 using System.Text.RegularExpressions;
 using Color = System.Drawing.Color;
 
@@ -95,11 +96,16 @@ public partial class TcgCardSlashCommand
 
         string GetName(int cardId)
         {
-            return GetDesc(
-                $"{data.Cost1Raw}" +
-                $"<img src='{data.Cost2TypeIcon}' /> - " +
-                $"{action.Basic.Name}"
-            );
+            var builder = new StringBuilder();
+            if (data.Cost2Raw > 0)
+            {
+                builder.Append($"<img src='{data.Cost2TypeIcon}' /> - ");
+            }
+            builder.Append($"{data.Cost1Raw} ");
+            builder.Append($"<img src='{data.Cost1TypeIcon}' /> ");
+            builder.Append($"- {action.Basic.Name} ");
+
+            return GetDesc(builder.ToString());
         }
 
         string GetDesc(string desc)
@@ -107,42 +113,21 @@ public partial class TcgCardSlashCommand
             var result = desc;
 
             result = result.Replace("\\n", "\n");
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f71f/e25f04745615df9e779831a1c1354e38.png' />",
-                emojis["food"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f71f/d92127a21b942663e6ed0717cef1086e.png' />",
-                emojis["location"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f71f/377c4198e3072e9c68066736be5b790c.png' />",
-                emojis["item"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f71f/1643452964b58e2e69e64e2b5d3b5878.png' />",
-                emojis["catalyst"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f71f/49acb071b0d634ded17cb788d9f520ed.png' />",
-                emojis["weapon"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f719/e1430a8775eb864ed0617b7ef516e608.png' />",
-                emojis["physical_dmg"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f719/8401f5013a7c381edb6cd088b207bb9f.png' />",
-                emojis["omni"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/' />",
-                emojis["aligned"].ToString()
-            );
-            result = result.Replace(
-                "<img src='https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/item_icon/67c7f719/39de35b178b080a090ac95622bbbf0df.png' />",
-                emojis["unaligned"].ToString()
-            );
+
+            result = ImgTagRegex().Replace(result, match =>
+            {
+                var url = match.Groups["url"].Value;
+
+                ApplicationEmoji? emoji = null;
+
+                var availableEmojis = HoyolabSharedUtils.UrlToEmojis
+                    .TryGetValue(url, out var emojiKey) 
+                    && emojis.TryGetValue(emojiKey, out emoji);
+
+                if (availableEmojis) return emoji!.ToString();
+
+                return match.Value; // leave unchanged if not found
+            });
 
             while (ColorTagRegex().IsMatch(result))
             {
@@ -160,4 +145,12 @@ public partial class TcgCardSlashCommand
         )
     ]
     private static partial Regex ColorTagRegex();
+
+    [
+        GeneratedRegex(
+            pattern: @"<img\s+src=['""](?<url>[^'""]+)['""][^>]*\/?>",
+            options: RegexOptions.IgnoreCase, cultureName: "en-US"
+        )
+    ]
+    private static partial Regex ImgTagRegex();
 }

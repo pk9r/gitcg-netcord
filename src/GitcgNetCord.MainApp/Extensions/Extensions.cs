@@ -29,7 +29,7 @@ public static class Extensions
         host.AddHoyolabGcgModule();
 
         // Utility modules
-        host.AddRoleEmojisModule();
+        host.AddUpdateEmojisModule();
     }
 
     public static void AddNetCordServices(

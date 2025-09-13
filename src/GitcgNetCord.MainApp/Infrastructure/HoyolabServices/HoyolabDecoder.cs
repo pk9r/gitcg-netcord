@@ -1,7 +1,6 @@
 ﻿using GitcgNetCord.MainApp.Enums;
 using GitcgNetCord.MainApp.Models;
 using HoyolabHttpClient;
-using HoyolabHttpClient.Models.Interfaces;
 using Microsoft.Extensions.Options;
 using SharedUtils;
 
