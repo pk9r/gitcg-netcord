@@ -1,6 +1,5 @@
 using GitcgNetCord.MainApp.Commands.Preconditions;
 using GitcgSkia;
-using GitcgSkia.Extensions;
 using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
@@ -74,13 +73,12 @@ public static class UpdateEmojisSlashCommand
         )
         {
             // Skip if the emote already exists
-            if (_emojis.ContainsKey(emojiName))
-                return;
+            bool emojiExists = _emojis.ContainsKey(emojiName)
+                || newEmotes.Any(x => x.Name == emojiName);
+            if (emojiExists) return;
 
             if (url == "https://act-webstatic.hoyoverse.com/hk4e/e20200928calculate/")
-            {
                 url += "item_icon/67c7f719/8b295c3fed21771dcced6055cdf2f2ce.png";
-            }
 
             using var icon = await imageCacheService.LoadHttpImageAsync(url);
 
@@ -96,14 +94,17 @@ public static class UpdateEmojisSlashCommand
                 quality: 100
             );
 
-            var emoji = await context.Client.Rest.CreateApplicationEmojiAsync(
-                applicationId: applicationId,
-                new ApplicationEmojiProperties(
-                    name: emojiName,
-                    image: new ImageProperties()
-                        .WithData(encoded.ToArray())
-                )
+            var image = new ImageProperties(
+                format: ImageFormat.WebP, 
+                data: encoded.ToArray()
             );
+
+            var emoji = await context.Client.Rest
+                .CreateApplicationEmojiAsync(
+                    applicationId,
+                    new ApplicationEmojiProperties(
+                        name: emojiName, image: image)
+                );
 
             newEmotes.Add(emoji);
         }
