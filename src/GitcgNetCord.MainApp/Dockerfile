@@ -15,7 +15,9 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj", "src/GitcgNetCord.MainApp/"]
 COPY ["src/GitcgPainter/GitcgPainter.csproj", "src/GitcgPainter/"]
+COPY ["src/GitcgSharp.Shared/GitcgSharp.Shared.csproj", "src/GitcgSharp.Shared/"]
 COPY ["src/HoyolabHttpClient/HoyolabHttpClient.csproj", "src/HoyolabHttpClient/"]
+COPY ["src/GitcgSkia/GitcgSkia.csproj", "src/GitcgSkia/"]
 COPY ["src/ServiceDefaults/ServiceDefaults.csproj", "src/ServiceDefaults/"]
 COPY ["src/SharedUtils/SharedUtils.csproj", "src/SharedUtils/"]
 RUN dotnet restore "./src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj"

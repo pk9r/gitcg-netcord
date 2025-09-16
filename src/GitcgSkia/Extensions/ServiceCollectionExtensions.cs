@@ -1,5 +1,5 @@
-﻿using GitcgSkia.ImageCreators.Deck;
-using GitcgSkia.ImageCreators.Deck.GameBackground;
+﻿using GitcgSkia.ImageCreators.Deck.GameBackground;
+using GitcgSkia.ImageCreators.Deck.Genshincards;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GitcgSkia.Extensions;
@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
             // .AddTransient<DeckImageCreatorCollection>()
             // .AddTransient<SimplestDeckImageCreator>()
             .AddTransient<GameBackgroundDeckImageCreator>()
-            // .AddTransient<GenshincardsDeckImageCreator>()
+            .AddTransient<GenshincardsDeckImageCreator>()
             ;
 
         return services;

@@ -7,18 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="assets\**"/>
+        <EmbeddedResource Include="assets\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="SkiaSharp"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid"/>
+        <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
-        <ProjectReference Include="..\HoyolabHttpClient\HoyolabHttpClient.csproj"/>
+        <ProjectReference Include="..\HoyolabHttpClient\HoyolabHttpClient.csproj" />
     </ItemGroup>
 
 </Project>

@@ -23,9 +23,6 @@ public class GameBackgroundDeckImageCreator(
 
     private static readonly SKPoint AuthorLocation = new(160, 1510);
 
-    private static readonly SKTypeface AuthorTypeface =
-        SKTypeface.FromFile("assets/fonts/Anton/Anton-Regular.ttf");
-
     public GameBackgroundDeckImageOptions Options { get; set; } = new();
 
     public async Task<Stream> CreateImageAsync(IDeckData deckData)
@@ -106,26 +103,31 @@ public class GameBackgroundDeckImageCreator(
 
             // update position
             actionCardIndex++;
+            var (dx, dy) = (0, 0);
             if (actionCardIndex % NColumns != 0)
             {
-                currentPosition.Offset(dx: ActionCardSize.Width + ActionCardSpacing, dy: 0);
+                dx = ActionCardSize.Width + ActionCardSpacing;
             }
             else
             {
+                dy = ActionCardSize.Height + ActionCardSpacing;
                 currentPosition.X = xActionsBase;
-                currentPosition.Offset(dx: 0, dy: ActionCardSize.Height + ActionCardSpacing);
+
             }
+            currentPosition.Offset(dx, dy);
         }
 
-        if (!string.IsNullOrWhiteSpace(value: Options.Author))
+        if (!string.IsNullOrWhiteSpace(Options.Author))
         {
             using var authorPaint = new SKPaint();
             authorPaint.Color = Color.White.ToSkColor();
             authorPaint.IsAntialias = true;
 
-            using var authorFont = new SKFont();
-            authorFont.Typeface = AuthorTypeface;
-            authorFont.Size = AuthorFontSize;
+            using var authorFont = new SKFont
+            {
+                Typeface = await SkAssetsUtils.LoadAntonRegularFontAsync(),
+                Size = AuthorFontSize
+            };
 
             canvas.DrawText(
                 text: Options.Author,
