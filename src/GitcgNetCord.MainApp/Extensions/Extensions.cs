@@ -5,6 +5,7 @@ using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Modules;
 using GitcgNetCord.MainApp.Modules.Feats;
+using GitcgNetCord.MainApp.Plugins.DuelAssistant;
 using GitcgPainter.Extensions;
 using GitcgSkia.Extensions;
 using HoyolabHttpClient.Extensions;
@@ -25,6 +26,7 @@ public static class Extensions
     {
         // Feature modules
         host.AddCardCodeModule();
+        host.AddDuelModule();
         host.AddHoyolabAccountModule();
         host.AddHoyolabGcgModule();
 
@@ -51,7 +53,8 @@ public static class Extensions
 
         services
             .AddGatewayHandler<CardCodeGatewayHandler>()
-            .AddGatewayHandler<ReplaysGatewayHandler>();
+            .AddGatewayHandler<ReplaysGatewayHandler>()
+            .AddGatewayHandler<DuelAssistantGatewayHandler>();
 
         services
             .AddOptionsWithValidateOnStart<CardCodeModuleOptions>()
@@ -74,11 +77,17 @@ public static class Extensions
         this IServiceCollection services
     )
     {
+        services
+            .AddOptionsWithValidateOnStart<DuelAssistantOptions>()
+            .BindConfiguration(DuelAssistantOptions.ConfigurationSectionName);
+
+        services.AddScoped<DuelUpdateDeckPlugin>();
+        
         services.AddScoped<ActiveHoyolabAccountService>();
         services.AddScoped<DiscordCardCodeChannelService>();
         services.AddScoped<DiscordUserService>();
         services.AddScoped<HoyolabAccountService>();
-
+        
         services.AddGitcgPainter();
         services.AddGitcgSkia();
         services.AddTransient<DeckImageCreatorCollection>();
