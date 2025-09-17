@@ -2,10 +2,12 @@
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.GatewayHandlers;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
+using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Modules;
 using GitcgNetCord.MainApp.Modules.Feats;
 using GitcgNetCord.MainApp.Plugins.DuelAssistant;
 using GitcgPainter.Extensions;
+using GitcgSkia.Extensions;
 using HoyolabHttpClient.Extensions;
 using NetCord;
 using NetCord.Gateway;
@@ -29,7 +31,7 @@ public static class Extensions
         host.AddHoyolabGcgModule();
 
         // Utility modules
-        host.AddRoleEmojisModule();
+        host.AddUpdateEmojisModule();
     }
 
     public static void AddNetCordServices(
@@ -39,10 +41,7 @@ public static class Extensions
         // builder.AddDiscordBotLoginOptions();
 
         services
-            .AddDiscordGateway(options =>
-            {
-                options.Intents = GatewayIntents.All;
-            })
+            .AddDiscordGateway(options => { options.Intents = GatewayIntents.All; })
             .AddApplicationCommands()
             .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
             .AddComponentInteractions<StringMenuInteraction, StringMenuInteractionContext>()
@@ -68,11 +67,12 @@ public static class Extensions
     {
         services.AddHoyolabHttpClient();
         services.AddSingleton<HoyolabCardRoleService>();
+        services.AddSingleton<HoyolabCardActionService>();
         services.AddSingleton<HoyolabDecoder>();
         services.AddSingleton<HoyolabDeckAccountService>();
         services.AddSingleton<HoyolabGcgBasicInfoService>();
     }
-    
+
     public static void AddAppServices(
         this IServiceCollection services
     )
@@ -89,5 +89,7 @@ public static class Extensions
         services.AddScoped<HoyolabAccountService>();
         
         services.AddGitcgPainter();
+        services.AddGitcgSkia();
+        services.AddTransient<DeckImageCreatorCollection>();
     }
 }

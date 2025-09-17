@@ -7,12 +7,13 @@ using HoyolabHttpClient.Models.Interfaces;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using IDeckImageCreationService = GitcgSharp.Shared.ImageCreators.Deck.Abstractions.IDeckImageCreationService;
 
 namespace GitcgPainter.ImageCreators.Deck.Simplest;
 
 public class SimplestDeckImageCreator(
-    ImageCacheService imageCacheService)
-    : IDeckImageCreationService
+    ImageCacheService imageCacheService
+) : IDeckImageCreationService
 {
     #region Constants
 
@@ -27,9 +28,7 @@ public class SimplestDeckImageCreator(
     private Size ActionCardSize { get; } = new(105, 180);
 
     private Point ActionCardsPosition { get; } = new(10, 300);
-
-    private readonly ImageCacheService _imageCacheService = imageCacheService;
-
+    
     public SimplestDeckImageOptions Options { get; set; } = new();
 
     public async Task<Stream> CreateImageAsync(IDeckData deck)
@@ -64,7 +63,7 @@ public class SimplestDeckImageCreator(
 
         // Draw role cards
         var (roleCardsX, roleCardsY) = (
-            widthImage / 2 - roleCardsWidth / 2, 
+            widthImage / 2 - roleCardsWidth / 2,
             ImagePadding
         );
 
@@ -73,7 +72,7 @@ public class SimplestDeckImageCreator(
         currentPosition.Offset(roleCardsX, roleCardsY);
         foreach (var roleCard in deck.RoleCards)
         {
-            using var cardImage = await _imageCacheService.LoadBorderedIconAsync(roleCard);
+            using var cardImage = await imageCacheService.LoadBorderedIconAsync(roleCard);
 
             if (cardImage is not null)
             {
@@ -92,7 +91,7 @@ public class SimplestDeckImageCreator(
         currentPosition = ActionCardsPosition;
         foreach (var actionCard in deck.ActionCards)
         {
-            using var cardImage = await _imageCacheService
+            using var cardImage = await imageCacheService
                 .LoadBorderedIconAsync(actionCard);
             cardImage.Mutate(context => context.Resize(ActionCardSize));
 

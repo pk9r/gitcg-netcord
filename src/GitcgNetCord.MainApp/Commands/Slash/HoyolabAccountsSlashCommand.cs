@@ -1,5 +1,6 @@
 ﻿using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
@@ -71,7 +72,7 @@ public static class HoyolabAccountsSlashCommand
                         })
                     )
                     .AddMessageIfAccountsEmpty(gameRecordList)
-                    .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                    .WithColor(Color.Purple.ToNetCordColor())
                 )
                 .AddComponents(new ActionRowProperties()
                     .AddButtons(

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using GitcgPainter.Extensions;
-using GitcgPainter.ImageCreators.Deck.Abstractions;
+using GitcgSharp.Shared.ImageCreators.Deck.Abstractions;
 using HoyolabHttpClient.Extensions;
 using HoyolabHttpClient.Models;
 using HoyolabHttpClient.Models.Interfaces;
@@ -14,6 +14,8 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using Action = HoyolabHttpClient.Models.Action;
+using SkillElements = HoyolabHttpClient.Extensions.SkillElements;
 
 namespace GitcgPainter.ImageCreators.Deck.Genshincards;
 
@@ -179,7 +181,7 @@ public class GenshincardsDeckImageCreator(
     }
 
     private async Task LoadAndDrawActionCardAsync(
-        Image image, HoyolabHttpClient.Models.Action actionCard, Point position, int quantity)
+        Image image, Action actionCard, Point position, int quantity)
     {
         using var cardImage = await LoadActionCardAsync(actionCard);
 
@@ -298,7 +300,7 @@ public class GenshincardsDeckImageCreator(
     }
 
     private async Task<Image> LoadActionCardAsync(
-        HoyolabHttpClient.Models.Action actionCard)
+        Action actionCard)
     {
         var cardImage = await imageCacheService.LoadIconAsync(actionCard);
 
@@ -324,8 +326,8 @@ public class GenshincardsDeckImageCreator(
     }
 
     private static int CalculateActionCardQuantity(
-        HoyolabHttpClient.Models.Action[] actionCards, int actionCardIndex,
-        out HoyolabHttpClient.Models.Action actionCard)
+        Action[] actionCards, int actionCardIndex,
+        out Action actionCard)
     {
         actionCard = actionCards[actionCardIndex];
 
@@ -334,7 +336,7 @@ public class GenshincardsDeckImageCreator(
         var actionCardsCount = actionCards.Length;
         var actionCardId = actionCard.Basic.ItemId;
 
-        HoyolabHttpClient.Models.Action nextActionCard;
+        Action nextActionCard;
         int nextActionCardIndex;
 
         do
@@ -364,7 +366,7 @@ public class GenshincardsDeckImageCreator(
     }
 
     private static bool ShouldRenderSecondarySkillElement(
-        HoyolabHttpClient.Models.Action actionCard,
+        Action actionCard,
         [NotNullWhen(true)] out SkillElement? skillElement2)
     {
         skillElement2 = actionCard.GetSkillElement2();
@@ -377,7 +379,7 @@ public class GenshincardsDeckImageCreator(
     }
 
     private static bool ShouldRenderSecondarySkillValue(
-        HoyolabHttpClient.Models.Action actionCard,
+        Action actionCard,
         [NotNullWhen(true)] out SkillElement? skillElement2)
     {
         skillElement2 = actionCard.GetSkillElement2();
@@ -386,7 +388,7 @@ public class GenshincardsDeckImageCreator(
             return false;
         }
 
-        var arcaneLegend = HoyolabHttpClient.Extensions.SkillElements.ArcaneLegend;
+        var arcaneLegend = SkillElements.ArcaneLegend;
         if (skillElement2 == arcaneLegend)
         {
             return false;

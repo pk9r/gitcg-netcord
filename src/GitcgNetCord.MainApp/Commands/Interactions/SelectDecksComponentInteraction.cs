@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
-using GitcgPainter.ImageCreators.Deck;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
 using Color = System.Drawing.Color;
+using DeckImageCreatorCollection = GitcgNetCord.MainApp.Models.DeckImageCreatorCollection;
 
 namespace GitcgNetCord.MainApp.Commands.Interactions;
 

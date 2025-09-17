@@ -16,7 +16,6 @@ public static class ServiceCollectionExtensions
             .AddSingleton<RolesImageCreator>()
             .AddTransient<DeckImageCreatorCollection>()
             .AddTransient<SimplestDeckImageCreator>()
-            .AddTransient<GameBackgroundDeckImageCreator>()
             .AddTransient<GenshincardsDeckImageCreator>();
 
         return services;

@@ -10,6 +10,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
     <ProjectReference Include="..\HoyolabHttpClient\HoyolabHttpClient.csproj" />
   </ItemGroup>
 

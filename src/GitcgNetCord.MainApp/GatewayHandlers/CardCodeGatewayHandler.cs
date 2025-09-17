@@ -5,8 +5,8 @@ using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
-using GitcgPainter.ImageCreators.Deck;
 using HoyolabHttpClient.Models.Interfaces;
 using Microsoft.Extensions.Options;
 using NetCord;
@@ -14,6 +14,7 @@ using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Rest;
 using Color = System.Drawing.Color;
+using DeckImageCreatorCollection = GitcgNetCord.MainApp.Models.DeckImageCreatorCollection;
 
 namespace GitcgNetCord.MainApp.GatewayHandlers;
 
@@ -82,7 +83,7 @@ public partial class CardCodeGatewayHandler(
         RestMessage? summaryMessage = null;
         var summaryEmbed = new EmbedProperties()
             .WithTitle("Sharing code list")
-            .WithColor(new NetCord.Color(Color.Purple.ToArgb()));
+            .WithColor(Color.Purple.ToNetCordColor());
 
         if (count > 1)
         {
@@ -158,7 +159,7 @@ public partial class CardCodeGatewayHandler(
                                 .WithValue(sharingCode)
                         )
                         .WithImage(new EmbedImageProperties(deckImageUrl))
-                        .WithColor(new NetCord.Color(Color.Purple.ToArgb()))
+                        .WithColor(Color.Purple.ToNetCordColor())
                     )
                     .AddComponents(new ActionRowProperties().AddButtons(
                         CopySharingCodeComponentInteraction
