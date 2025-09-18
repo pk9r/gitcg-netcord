@@ -3,7 +3,6 @@ using GitcgNetCord.MainApp.Components;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
 using Microsoft.SemanticKernel;
-using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
 
 var builder = WebApplication.CreateBuilder(args);

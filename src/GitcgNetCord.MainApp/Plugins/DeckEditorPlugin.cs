@@ -145,7 +145,7 @@ public class DeckEditorPlugin(
     // ReSharper disable once UnusedMember.Global
     public async Task<ActionCollectionModel> GetActionCollectionAsync()
     {
-        var result = await hoyolab.GetActionsAsync(
+        var result = await hoyolab.GetCardActionsAsync(
             roleIds: deckEditorContext.DeckModel.ActionCards
         );
 

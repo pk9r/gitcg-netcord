@@ -54,7 +54,7 @@ public static class Extensions
 
         services
             .AddGatewayHandler<CardCodeGatewayHandler>()
-            .AddGatewayHandler<ReplaysGatewayHandler>();
+            .AddGatewayHandler<ReplaysGatewayHandler>()
             .AddGatewayHandler<DeckEditorGatewayHandler>()
             .AddGatewayHandler<DuelAssistantGatewayHandler>();
 
