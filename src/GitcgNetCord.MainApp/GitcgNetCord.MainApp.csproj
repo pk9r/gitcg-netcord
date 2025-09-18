@@ -35,6 +35,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Plugins\DeckEditor\" />
   </ItemGroup>
 
 </Project>

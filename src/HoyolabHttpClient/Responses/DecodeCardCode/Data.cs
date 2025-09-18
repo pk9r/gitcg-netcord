@@ -8,8 +8,8 @@ namespace HoyolabHttpClient.Responses.DecodeCardCode;
 public record Data : IDeckData
 {
     [JsonPropertyName("role_cards")]
-    public IReadOnlyList<Role> RoleCards { get; init; } = null!;
+    public IReadOnlyCollection<Role> RoleCards { get; init; } = null!;
 
     [JsonPropertyName("action_cards")]
-    public IReadOnlyList<Action> ActionCards { get; init; } = null!;
+    public IReadOnlyCollection<Action> ActionCards { get; init; } = null!;
 }

@@ -33,6 +33,12 @@ builder.Services.AddNetCordServices();
 builder.Services.AddHoyolabServices();
 builder.Services.AddAppServices();
 
+builder.Services.AddOpenAIChatCompletion(
+    modelId: builder.Configuration["OpenAiOptions:ModelId"]!,
+    apiKey: builder.Configuration["OpenAiOptions:ApiKey"]!,
+    endpoint: new Uri(builder.Configuration["OpenAiOptions:EndpointUrl"]!)
+);
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

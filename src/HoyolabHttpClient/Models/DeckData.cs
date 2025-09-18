@@ -4,6 +4,6 @@ using HoyolabHttpClient.Models.Interfaces;
 namespace HoyolabHttpClient.Models;
 
 public record DeckData(
-    IReadOnlyList<Role> RoleCards,
-    IReadOnlyList<Action> ActionCards
+    IReadOnlyCollection<Role> RoleCards,
+    IReadOnlyCollection<Action> ActionCards
 ) : IDeckData;
