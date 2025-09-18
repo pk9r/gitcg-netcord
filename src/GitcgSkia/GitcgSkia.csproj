@@ -15,7 +15,7 @@
 		<PackageReference Include="SkiaSharp" />
 		<PackageReference
 			Condition="$([MSBuild]::IsOSPlatform('Linux'))"
-			Include="SkiaSharp.NativeAssets.Linux" />
+			Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
 	</ItemGroup>
 
 	<ItemGroup>
