@@ -13,12 +13,19 @@ main.WithReference(redis).WaitFor(redis);
 var useRemotePostgres = builder.Configuration
     .GetValue<bool>("AppBuilderOptions:UseRemotePostgres");
 
+var postgresResourceName = "gitcgnetcorddb";
 if (useRemotePostgres)
 {
-    var postgresConnectionString = builder
-        .AddConnectionString("gitcgnetcorddb");
+    var isPostgresConnectionStringEmpty = string.IsNullOrWhiteSpace(
+        builder.Configuration.GetConnectionString(postgresResourceName)
+    );
+    if (!isPostgresConnectionStringEmpty)
+    {
+        var gitcgnetcorddbConnectionString = builder
+            .AddConnectionString(postgresResourceName);
 
-    main.WithReference(postgresConnectionString);
+        main.WithReference(gitcgnetcorddbConnectionString);
+    }
 }
 else
 {
@@ -31,12 +38,15 @@ else
         name: "postgresql",
         password: postgresPassword
     );
-    
+
     postgres
         .WithDataVolume()
         .WithPgAdmin();
-    
-    main.WithReference(postgres).WaitFor(postgres);
+
+    var gitcgnetcorddb = postgres
+        .AddDatabase("gitcgnetcord");
+
+    main.WithReference(gitcgnetcorddb).WaitFor(gitcgnetcorddb);
 }
 
 builder.Build().Run();

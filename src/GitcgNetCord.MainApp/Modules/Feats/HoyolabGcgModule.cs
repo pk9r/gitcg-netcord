@@ -11,25 +11,31 @@ public static class HoyolabGcgModule
         host.AddSlashCommand(
             name: "tcg",
             description: "Show Genshin Impact TCG information.",
-            handler: TcgSlashCommand.ExecuteAsync,
-            contexts:
-            [
-                InteractionContextType.Guild,
-                InteractionContextType.BotDMChannel,
-                InteractionContextType.DMChannel
-            ]
-        );
+            handler: TcgSlashCommand.ExecuteAsync
+        ).AddContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDMChannel,
+            InteractionContextType.DMChannel
+        ); ;
         
         host.AddSlashCommand(
             name: "card",
             description: "Show Genshin Impact TCG card information.",
-            handler: CardSlashCommand.ExecuteAsync,
-            contexts:
-            [
-                InteractionContextType.Guild,
-                InteractionContextType.BotDMChannel,
-                InteractionContextType.DMChannel
-            ]
+            handler: CardSlashCommand.ExecuteAsync
+        ).AddContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDMChannel,
+            InteractionContextType.DMChannel
+        ); ;
+
+        host.AddSlashCommand(
+            name: "tcg-card",
+            description: "Information about a specific Genius Invokation card.",
+            handler: TcgCardSlashCommand.ExecuteAsync
+        ).AddContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDMChannel,
+            InteractionContextType.DMChannel
         );
     }
 }

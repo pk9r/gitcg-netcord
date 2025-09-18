@@ -18,9 +18,9 @@ public static class ImageCacheServiceExtension
             Role role
         )
     {
-        return imageCacheService.LoadHttpImageAsync(
-            uri: role.Basic.IconSmall
-        );
+        var uri = role.Basic.IconSmall;
+
+        return imageCacheService.LoadHttpImageAsync(uri);
     }
 
     public static ValueTask<SKBitmap> LoadIconAsync(
@@ -28,9 +28,9 @@ public static class ImageCacheServiceExtension
         Basic basic
     )
     {
-        return imageCacheService.LoadHttpImageAsync(
-            uri: basic.Icon
-        );
+        var uri = basic.Icon;
+
+        return imageCacheService.LoadHttpImageAsync(uri);
     }
 
     public static ValueTask<SKBitmap>
@@ -39,7 +39,9 @@ public static class ImageCacheServiceExtension
             ICardBasic card
         )
     {
-        return imageCacheService.LoadIconAsync(card.Basic);
+        var basic = card.Basic;
+
+        return imageCacheService.LoadIconAsync(basic);
     }
 
     public static async ValueTask<SKBitmap>
@@ -55,17 +57,17 @@ public static class ImageCacheServiceExtension
 
         if (cachedBorderedIcon != null) return cachedBorderedIcon;
 
-        SKBitmap cachedBorder;
-        if (IsArcaneCard(card: card))
-            cachedBorder = await imageCacheService.LoadArcaneBorderAsync();
+        SKBitmap border;
+        if (IsArcaneCard(card))
+            border = await imageCacheService.LoadArcaneBorderAsync();
         else
-            cachedBorder = await SkAssetsUtils.LoadCardBorderAsync();
+            border = await SkAssetsUtils.LoadCardBorderAsync();
 
-        using (cachedBorder)
+        using (border)
         {
-            var cachedIcon = await imageCacheService.LoadIconAsync(card: card);
+            var Icon = await imageCacheService.LoadIconAsync(card);
 
-            var borderedIcon = BorderIcon(icon: cachedIcon, border: cachedBorder);
+            var borderedIcon = BorderIcon(icon: Icon, border: border);
 
             cachedBorderedIcon = await imageCacheService
                 .CacheImageAsync(key: cacheKey, image: borderedIcon);
@@ -98,7 +100,7 @@ public static class ImageCacheServiceExtension
             key: Utils.ArcaneBorderCacheKey,
             image: arcaneBorderResized
         );
-        cachedArcaneBorder = arcaneBorder;
+        cachedArcaneBorder = arcaneBorderResized;
 
         return cachedArcaneBorder;
     }

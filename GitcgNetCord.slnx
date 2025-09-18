@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />
     <File Path="global.json" />
+    <File Path="NuGet.config" />
     <File Path="README.md" />
     <File Path="LICENSE" />
     <File Path=".gitignore" />
@@ -12,8 +13,8 @@
     <Project Path="src/GitcgPainter/GitcgPainter.csproj" />
     <Project Path="src/HoyolabHttpClient/HoyolabHttpClient.csproj" />
     <Project Path="src/SharedUtils/SharedUtils.csproj" />
-    <Project Path="src\GitcgSharp.Shared\GitcgSharp.Shared.csproj" Type="Classic C#" />
-    <Project Path="src\GitcgSkia\GitcgSkia.csproj" Type="Classic C#" />
+    <Project Path="src\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
+    <Project Path="src\GitcgSkia\GitcgSkia.csproj" />
   </Folder>
   <Project Path="src/AppHost/AppHost.csproj" />
   <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />

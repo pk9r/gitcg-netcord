@@ -1,3 +1,4 @@
+using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
@@ -9,10 +10,25 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+var azureVaultUri = builder.Configuration["AzureVaultUri"];
+if (!string.IsNullOrEmpty(azureVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(
+        vaultUri: new Uri(azureVaultUri),
+        credential: new DefaultAzureCredential()
+    );
+}
+
 builder.AddRedisDistributedCache("redis");
 builder.Services.AddHybridCache();
 
 builder.AddNpgsqlDbContext<AppDbContext>("gitcgnetcorddb");
+
+builder.Services.AddOpenAIChatCompletion(
+    modelId: builder.Configuration["OpenAiOptions:ModelId"]!,
+    apiKey: builder.Configuration["OpenAiOptions:ApiKey"]!,
+    endpoint: new Uri(builder.Configuration["OpenAiOptions:EndpointUrl"]!)
+);
 
 builder.Services.AddNetCordServices();
 builder.Services.AddHoyolabServices();
@@ -59,7 +75,5 @@ app.MapGet(
     pattern: "/api/",
     handler: () => "Hello World!"
 );
-
-app.UseGatewayHandlers();
 
 app.Run();

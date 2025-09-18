@@ -59,6 +59,15 @@ public static class SkAssetsUtils
     public static readonly string RobotoBoldFontPath
         = $"{typeof(Utils).Namespace}.assets.fonts.Roboto.Roboto-Bold.ttf";
 
+    public static ValueTask<SKTypeface> LoadAntonRegularFontAsync()
+        => LoadTypefaceFromManifestResourceAsync(AntonRegularFontPath);
+
+    public static ValueTask<SKTypeface> LoadRobotoRegularFontAsync()
+        => LoadTypefaceFromManifestResourceAsync(RobotoRegularFontPath);
+
+    public static ValueTask<SKTypeface> LoadRobotoBoldFontAsync()
+        => LoadTypefaceFromManifestResourceAsync(RobotoBoldFontPath);
+
     public static ValueTask<SKBitmap> LoadCardBorderAsync()
         => LoadImageFromManifestResourceAsync(CardBorderPath);
 
@@ -80,5 +89,19 @@ public static class SkAssetsUtils
         var image = SKBitmap.Decode(stream);
 
         return image;
+    }
+
+    public static async ValueTask<SKTypeface>
+        LoadTypefaceFromManifestResourceAsync(string name)
+    {
+        await using var stream =
+            Assembly.GetManifestResourceStream(name) ??
+            throw new InvalidOperationException(
+                $"Resource {name} not found."
+            );
+
+        var typeface = SKTypeface.FromStream(stream);
+
+        return typeface;
     }
 }

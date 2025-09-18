@@ -11,7 +11,8 @@ public record HoyolabResponseBase
     public string? Message { get; set; }
 }
 
-public record HoyolabResponseBase<T> : HoyolabResponseBase
+public record HoyolabResponseBase<T> 
+    : HoyolabResponseBase
 {
     [JsonPropertyName("data")]
     public T? Data { get; init; }
