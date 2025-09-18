@@ -1,34 +1,32 @@
+using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
-using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
-using HoyolabHttpClient.Extensions;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using NetCord;
-using NetCord.Gateway;
-using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
-using NetCord.Hosting.Services.ComponentInteractions;
-using NetCord.Services.ComponentInteractions;
-using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+var azureVaultUri = builder.Configuration["AzureVaultUri"];
+if (!string.IsNullOrEmpty(azureVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(
+        vaultUri: new Uri(azureVaultUri),
+        credential: new DefaultAzureCredential()
+    );
+}
 
 builder.AddRedisDistributedCache("redis");
 builder.Services.AddHybridCache();
 
 builder.AddNpgsqlDbContext<AppDbContext>("gitcgnetcorddb");
 
-builder.Services.AddHttpClient<IChatCompletionService>()
-    .ConfigureHttpClient(o => o.Timeout = Timeout.InfiniteTimeSpan);
-
 builder.Services.AddOpenAIChatCompletion(
-    modelId: builder.Configuration["DuelAssistantOptions:ModelId"]!,
-    apiKey: builder.Configuration["DuelAssistantOptions:ApiKey"]!,
-    endpoint: new Uri(builder.Configuration["DuelAssistantOptions:EndpointUrl"]!)
+    modelId: builder.Configuration["OpenAiOptions:ModelId"]!,
+    apiKey: builder.Configuration["OpenAiOptions:ApiKey"]!,
+    endpoint: new Uri(builder.Configuration["OpenAiOptions:EndpointUrl"]!)
 );
 
 builder.Services.AddNetCordServices();
@@ -70,7 +68,5 @@ app.MapGet(
     pattern: "/api/",
     handler: () => "Hello World!"
 );
-
-app.UseGatewayHandlers();
 
 app.Run();

@@ -14,13 +14,11 @@ public static class DuelModule
         host.AddSlashCommand(
             name: "duel",
             description: "Start a duel with another player.",
-            handler: DuelSlashCommand.ExecuteAsync,
-            contexts:
-            [
-                InteractionContextType.Guild
-            ]
+            handler: DuelSlashCommand.ExecuteAsync
+        ).AddContexts(
+            InteractionContextType.Guild
         );
-        
+
         host.AddComponentInteraction<ButtonInteractionContext>(
             customId: AcceptDuelComponentInteraction.CustomId,
             handler: AcceptDuelComponentInteraction.ExecuteAsync

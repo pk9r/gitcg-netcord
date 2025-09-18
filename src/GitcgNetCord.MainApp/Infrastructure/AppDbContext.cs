@@ -41,6 +41,11 @@ public class AppDbContext : DbContext
                 .ValueGeneratedNever();
         });
 
+        builder.Entity<DiscordCardCodeChannel>(config =>
+        {
+            config.Property(x => x.Id)
+                .ValueGeneratedNever();
+        });
 
         base.OnModelCreating(builder);
     }

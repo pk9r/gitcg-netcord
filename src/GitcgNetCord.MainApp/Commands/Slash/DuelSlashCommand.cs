@@ -30,19 +30,25 @@ public static class DuelSlashCommand
 
         await context.Interaction.ModifyResponseAsync(message =>
         {
-            message.Content = $"{context.User} has challenged {opponent} to a duel of type {type}.";
-            message.AddComponents(new ActionRowProperties().AddButtons(
-                new ButtonProperties(
-                    customId: "accept-duel",
-                    label: "Accept",
-                    style: ButtonStyle.Success
-                ),
-                new ButtonProperties(
-                    customId: "decline-duel",
-                    label: "Decline",
-                    style: ButtonStyle.Danger
-                )
-            ));
+            message.Content = 
+                $"{context.User} has challenged " +
+                $"{opponent} to a duel of type {type}.";
+
+            message.AddComponents(
+                new ActionRowProperties()
+                {
+                    new ButtonProperties(
+                        customId: "accept-duel",
+                        label: "Accept",
+                        style: ButtonStyle.Success
+                    ),
+                    new ButtonProperties(
+                        customId: "decline-duel",
+                        label: "Decline",
+                        style: ButtonStyle.Danger
+                    )
+                }
+            );
         });
     }
 }

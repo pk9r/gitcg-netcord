@@ -36,14 +36,14 @@ public partial class CardCodeGatewayHandler(
         var dbChannel = await FindDbChannelAsync(message.ChannelId);
 
         var guildThread = message.Channel as GuildThread;
-        
-        if (dbChannel == null &&  guildThread == null)
+
+        if (dbChannel == null && guildThread == null)
             return;
 
         if (guildThread != null)
         {
             dbChannel = await FindDbChannelAsync(guildThread.ParentId);
-            
+
             if (dbChannel == null)
                 return;
         }
@@ -161,10 +161,13 @@ public partial class CardCodeGatewayHandler(
                         .WithImage(new EmbedImageProperties(deckImageUrl))
                         .WithColor(Color.Purple.ToNetCordColor())
                     )
-                    .AddComponents(new ActionRowProperties().AddButtons(
-                        CopySharingCodeComponentInteraction
-                            .CreateCopySharingCodeButton(sharingCode)
-                    ))
+                    .AddComponents(
+                        new ActionRowProperties()
+                        {
+                            CopySharingCodeComponentInteraction
+                                .CreateCopySharingCodeButton(sharingCode)
+                        }
+                    )
             );
 
             await UpdateSummaryMessageAsync();

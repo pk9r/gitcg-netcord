@@ -74,8 +74,9 @@ public static class HoyolabAccountsSlashCommand
                     .AddMessageIfAccountsEmpty(gameRecordList)
                     .WithColor(Color.Purple.ToNetCordColor())
                 )
-                .AddComponents(new ActionRowProperties()
-                    .AddButtons(
+                .AddComponents(
+                    new ActionRowProperties()
+                    {
                         new ButtonProperties(
                             customId: AddHoyolabAccountComponentInteraction.CustomId,
                             label: "Add account",
@@ -89,7 +90,8 @@ public static class HoyolabAccountsSlashCommand
                         //     customId: "remove-hoyolab-account",
                         //     label: "Remove account",
                         //     style: ButtonStyle.Danger)
-                    ));
+                    }
+                );
         });
     }
 }

@@ -14,13 +14,11 @@ public static class CardCodeModule
         host.AddSlashCommand(
             name: "deck",
             description: "View cards from deck sharing code.",
-            handler: DeckSlashCommand.ExecuteAsync,
-            contexts:
-            [
-                InteractionContextType.Guild,
-                InteractionContextType.BotDMChannel,
-                InteractionContextType.DMChannel
-            ]
+            handler: DeckSlashCommand.ExecuteAsync
+        ).AddContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDMChannel,
+            InteractionContextType.DMChannel
         );
 
         host.AddComponentInteraction<ButtonInteractionContext>(

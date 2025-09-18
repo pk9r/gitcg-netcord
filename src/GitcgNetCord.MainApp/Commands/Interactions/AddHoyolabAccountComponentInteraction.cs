@@ -17,30 +17,39 @@ public static class AddHoyolabAccountComponentInteraction
     )
     {
         await context.Interaction.SendResponseAsync(
-            InteractionCallback.Modal(new ModalProperties(
-                customId: PostCustomId,
-                title: "Hoyolab account"
+            InteractionCallback.Modal(
+                new ModalProperties(
+                    customId: PostCustomId,
+                    title: "Hoyolab account"
+                )
+                {
+                    new LabelProperties(
+                        label: "Hoyolab user ID (ltuid_v2)",
+                        component: new TextInputProperties(
+                            customId: "hoyolab-user-id",
+                            style: TextInputStyle.Short
+                        )
+                        {
+                            MaxLength = 10,
+                            Placeholder = "ltuid_v2"
+                        }
+                    ),
+                    new LabelProperties(
+                        label: "Hoyolab token (ltoken_v2)",
+                        component: new TextInputProperties(
+                            customId: "token",
+                            style: TextInputStyle.Paragraph)
+                        {
+                            MaxLength = 255,
+                            Placeholder = "v2_..."
+                        }
+                    )
+                }
             )
-            {
-                new TextInputProperties(
-                        customId: "hoyolab-user-id",
-                        style: TextInputStyle.Short,
-                        label: "Hoyolab user ID (ltuid_v2)")
-                    .WithMaxLength(10)
-                    .WithPlaceholder("ltuid_v2"),
-                new TextInputProperties(
-                        customId: "token",
-                        style: TextInputStyle.Paragraph,
-                        label: "Token (ltoken_v2)")
-                    .WithMaxLength(255)
-                    .WithPlaceholder("v2_...")
-            })
         );
     }
 
     public static async Task PostAsync(
-        HoyolabHttpClientService hoyolab,
-        HybridCache cache,
         IServiceProvider serviceProvider,
         ModalInteractionContext context
     )

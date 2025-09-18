@@ -20,11 +20,15 @@ public static class UpdateActiveHoyolabAccountComponentInteraction
                 title: "Update active hoyolab account"
             )
             {
-                new TextInputProperties(
+                new LabelProperties(
+                    label: "Genshin Impact UID",
+                    component: new TextInputProperties(
                         customId: "uid",
-                        style: TextInputStyle.Short,
-                        label: "Genshin Impact UID")
-                    .WithMaxLength(10)
+                        style: TextInputStyle.Short)
+                    {
+                        MaxLength = 10
+                    }
+                )
             })
         );
     }
@@ -53,7 +57,6 @@ public static class UpdateActiveHoyolabAccountComponentInteraction
                     continue;
             }
         }
-
 
         try
         {

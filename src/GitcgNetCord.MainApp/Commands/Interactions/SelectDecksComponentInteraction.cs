@@ -77,10 +77,11 @@ public static class SelectDecksComponentInteraction
                         new TextDisplayProperties(
                             $"`{s.SharingCode}`"
                         ),
-                        new ActionRowProperties().AddButtons(
+                        new ActionRowProperties
+                        {
                             CopySharingCodeComponentInteraction
                                 .CreateCopySharingCodeButton(s.SharingCode)
-                        )
+                        }
                     )
                 )
             )
