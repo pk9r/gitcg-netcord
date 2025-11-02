@@ -1,25 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="redis" uuid="b917bd5d-6d70-4ff5-8270-df2e2a32040d">
-      <driver-ref>redis</driver-ref>
+    <data-source source="LOCAL" name="@gitcg.pk9r.dev" uuid="9f51aec5-6dba-4d2e-a6b0-1ed4f2dadee8">
+      <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
-      <jdbc-url>jdbc:redis://S2ESCkEMQy5sGNdt2H9Cxw@localhost:60152</jdbc-url>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://gitcg.pk9r.dev:5432/</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="com.intellij.clouds.kubernetes.db.host.port" />
+        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
+        <property name="com.intellij.clouds.kubernetes.db.container.port" />
+      </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="redis" uuid="d0d83468-25fb-47ed-bb03-117cc08c918b">
+    <data-source source="LOCAL" name="0@localhost" uuid="20352308-b6d9-4f76-82d2-171f8c6e1999">
       <driver-ref>redis</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
-      <jdbc-url>jdbc:redis://Buj1abxDwEGahsWyGuaJCG@localhost:32771</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-    <data-source source="LOCAL" name="redis" uuid="d253d481-9124-47a7-9d90-696e4c629397">
-      <driver-ref>redis</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
-      <jdbc-url>jdbc:redis://ZJkuz5czhK1EC2V41GNSxc@localhost:52720</jdbc-url>
+      <jdbc-url>jdbc:redis://localhost:6379/0</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

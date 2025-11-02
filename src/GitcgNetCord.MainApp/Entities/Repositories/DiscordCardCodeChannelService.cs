@@ -6,7 +6,8 @@ public class DiscordCardCodeChannelService(
     AppDbContext dbContext
 )
 {
-    public async ValueTask<DiscordCardCodeChannel?> FindAsync(ulong? channelId)
+    public async ValueTask<DiscordCardCodeChannel?> 
+        FindAsync(ulong? channelId)
     {
         return await dbContext
             .DiscordCardCodeChannels

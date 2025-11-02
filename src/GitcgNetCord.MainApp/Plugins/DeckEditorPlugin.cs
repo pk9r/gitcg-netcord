@@ -157,7 +157,7 @@ public class DeckEditorPlugin(
             })
             .ToList();
 
-        return new()
+        return new ActionCollectionModel
         {
             ActionCards = models,
             CurrentContext = deckEditorContext

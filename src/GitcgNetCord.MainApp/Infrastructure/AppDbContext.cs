@@ -45,6 +45,8 @@ public class AppDbContext : DbContext
         {
             config.Property(x => x.Id)
                 .ValueGeneratedNever();
+            config.Property(x => x.SharingDecodeType)
+                .HasConversion<string>();
         });
 
         base.OnModelCreating(builder);

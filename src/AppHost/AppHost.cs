@@ -3,17 +3,37 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("redis")
-    .WithDataVolume();
+var main = builder
+    .AddProject<GitcgNetCord_MainApp>("main");
 
-var main = builder.AddProject<GitcgNetCord_MainApp>("main");
+var useRemoteRedis = builder.Configuration
+    .GetValue<bool>("AppBuilderOptions:UseRemoteRedis");
+if (useRemoteRedis)
+{
+    var isRedisConnectionStringEmpty = string.IsNullOrWhiteSpace(
+        builder.Configuration.GetConnectionString("redis")
+    );
+    if (!isRedisConnectionStringEmpty)
+    {
+        var redisConnectionString = builder
+            .AddConnectionString("redis");
 
-main.WithReference(redis).WaitFor(redis);
+        main.WithReference(redisConnectionString);
+    }
+    else
+    {
+        var redis = builder
+            .AddRedis("redis")
+            .WithDataVolume();
+        
+        main.WithReference(redis).WaitFor(redis);
+    }
+}
 
 var useRemotePostgres = builder.Configuration
     .GetValue<bool>("AppBuilderOptions:UseRemotePostgres");
 
-var postgresResourceName = "gitcgnetcorddb";
+const string postgresResourceName = "gitcgnetcorddb";
 if (useRemotePostgres)
 {
     var isPostgresConnectionStringEmpty = string.IsNullOrWhiteSpace(
