@@ -42,11 +42,16 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Property<decimal>("Id")
                         .HasColumnType("numeric(20,0)");
 
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
                     b.Property<string>("SharingDecodeType")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
 
                     b.ToTable("DiscordCardCodeChannels");
                 });

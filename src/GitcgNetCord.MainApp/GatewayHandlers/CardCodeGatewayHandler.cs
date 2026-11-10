@@ -5,6 +5,7 @@ using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Enums;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using HoyolabHttpClient.Models.Interfaces;
@@ -15,6 +16,7 @@ using NetCord.Hosting.Gateway;
 using NetCord.Rest;
 using Color = System.Drawing.Color;
 using DeckImageCreatorCollection = GitcgNetCord.MainApp.Models.DeckImageCreatorCollection;
+using IDeckImageCreationService = GitcgSharp.Shared.ImageCreators.Deck.Abstractions.IDeckImageCreationService;
 
 namespace GitcgNetCord.MainApp.GatewayHandlers;
 
@@ -106,7 +108,11 @@ public partial class CardCodeGatewayHandler(
             }
         }
 
-        var deckImageCreator = deckImageCreatorCollection.GameBackground;
+        IDeckImageCreationService deckImageCreator = dbChannel?.SharingDecodeType switch
+        {
+            SharingDecodeType.ImageGenshincards => deckImageCreatorCollection.Genshincards,
+            _ => deckImageCreatorCollection.GameBackground
+        };
 
         for (var i = 0; i < count; i++)
         {

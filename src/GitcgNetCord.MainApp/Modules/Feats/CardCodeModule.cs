@@ -21,6 +21,31 @@ public static class CardCodeModule
             InteractionContextType.DMChannel
         );
 
+        var cardCodeChannelGroup = host.AddSlashCommandGroup(
+            name: "cardcode-channel",
+            description: "Manage channels for card code recognition."
+        )
+        .WithDefaultGuildPermissions(Permissions.ManageChannels)
+        .AddContexts([InteractionContextType.Guild]);
+
+        cardCodeChannelGroup.AddSubCommand(
+            name: "add",
+            description: "Register a channel for card code recognition.",
+            handler: CardCodeChannelSlashCommand.AddAsync
+        );
+
+        cardCodeChannelGroup.AddSubCommand(
+            name: "remove",
+            description: "Unregister a channel from card code recognition.",
+            handler: CardCodeChannelSlashCommand.RemoveAsync
+        );
+
+        cardCodeChannelGroup.AddSubCommand(
+            name: "list",
+            description: "List registered card code channels in this server.",
+            handler: CardCodeChannelSlashCommand.ListAsync
+        );
+
         host.AddComponentInteraction<ButtonInteractionContext>(
             customId: CopySharingCodeComponentInteraction.BaseCustomId,
             handler: CopySharingCodeComponentInteraction.ExecuteAsync

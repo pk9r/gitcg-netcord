@@ -47,6 +47,7 @@ public class AppDbContext : DbContext
                 .ValueGeneratedNever();
             config.Property(x => x.SharingDecodeType)
                 .HasConversion<string>();
+            config.HasIndex(x => x.GuildId);
         });
 
         base.OnModelCreating(builder);
