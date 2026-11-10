@@ -1,9 +1,7 @@
 using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
-using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
-using Microsoft.SemanticKernel;
 using NetCord.Hosting.Services.ApplicationCommands;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,30 +22,7 @@ builder.Services.AddHybridCache();
 
 builder.AddNpgsqlDbContext<AppDbContext>("gitcgnetcorddb");
 
-var openAiOptions = builder.Configuration
-    .GetSection(OpenAiOptions.ConfigurationSectionName)
-    .Get<OpenAiOptions>();
-
-if (openAiOptions is { Enabled: true }
-    && !string.IsNullOrWhiteSpace(openAiOptions.ModelId)
-    && !string.IsNullOrWhiteSpace(openAiOptions.ApiKey))
-{
-    if (Uri.TryCreate(openAiOptions.EndpointUrl, UriKind.Absolute, out var endpointUri))
-    {
-        builder.Services.AddOpenAIChatCompletion(
-            modelId: openAiOptions.ModelId,
-            apiKey: openAiOptions.ApiKey,
-            endpoint: endpointUri
-        );
-    }
-    else
-    {
-        builder.Services.AddOpenAIChatCompletion(
-            modelId: openAiOptions.ModelId,
-            apiKey: openAiOptions.ApiKey
-        );
-    }
-}
+builder.AddOpenAiServices();
 
 builder.Services.AddNetCordServices();
 builder.Services.AddHoyolabServices();

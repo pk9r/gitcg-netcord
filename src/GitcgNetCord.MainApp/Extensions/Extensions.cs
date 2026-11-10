@@ -9,6 +9,7 @@ using GitcgNetCord.MainApp.Plugins;
 using GitcgNetCord.MainApp.Plugins.DuelAssistant;
 using GitcgSkia.Extensions;
 using HoyolabHttpClient.Extensions;
+using Microsoft.SemanticKernel;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -96,5 +97,58 @@ public static class Extensions
 
         services.AddSingleton<DeckEditorContext>();
         services.AddSingleton<GitcgGatewayHandlerContext>();
+    }
+
+    public static TBuilder AddOpenAiServices<TBuilder>(
+        this TBuilder builder,
+        string configurationSectionName = OpenAiOptions.ConfigurationSectionName
+    ) where TBuilder : IHostApplicationBuilder
+    {
+        builder.Services.AddOpenAiServices(builder.Configuration, configurationSectionName);
+        return builder;
+    }
+
+    public static IServiceCollection AddOpenAiServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string configurationSectionName = OpenAiOptions.ConfigurationSectionName
+    )
+    {
+        services
+            .AddOptionsWithValidateOnStart<OpenAiOptions>()
+            .BindConfiguration(configurationSectionName);
+
+        var openAiOptions = configuration
+            .GetSection(configurationSectionName)
+            .Get<OpenAiOptions>();
+
+        if (openAiOptions is { Enabled: true }
+            && !string.IsNullOrWhiteSpace(openAiOptions.ModelId)
+            && !string.IsNullOrWhiteSpace(openAiOptions.ApiKey))
+        {
+            var isUriValid = Uri.TryCreate(
+                openAiOptions.EndpointUrl,
+                UriKind.Absolute,
+                out var endpointUri
+            );
+
+            if (isUriValid)
+            {
+                services.AddOpenAIChatCompletion(
+                    modelId: openAiOptions.ModelId,
+                    apiKey: openAiOptions.ApiKey,
+                    endpoint: endpointUri!
+                );
+            }
+            else
+            {
+                services.AddOpenAIChatCompletion(
+                    modelId: openAiOptions.ModelId,
+                    apiKey: openAiOptions.ApiKey
+                );
+            }
+        }
+
+        return services;
     }
 }
