@@ -1,13 +1,12 @@
-﻿using GitcgNetCord.MainApp.Configuration;
+using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.GatewayHandlers;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Modules;
 using GitcgNetCord.MainApp.Modules.Feats;
-using GitcgNetCord.MainApp.Plugins.DuelAssistant;
 using GitcgNetCord.MainApp.Plugins;
-using GitcgPainter.Extensions;
+using GitcgNetCord.MainApp.Plugins.DuelAssistant;
 using GitcgSkia.Extensions;
 using HoyolabHttpClient.Extensions;
 using NetCord;
@@ -92,7 +91,6 @@ public static class Extensions
 
         services.AddScoped<DeckEditorPlugin>();
 
-        services.AddGitcgPainter();
         services.AddGitcgSkia();
         services.AddTransient<DeckImageCreatorCollection>();
 

@@ -34,7 +34,9 @@ public class DuelAssistantGatewayHandler(
         ];
 
         var kernel = new Kernel(scope.ServiceProvider, plugins);
-        var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        var chatCompletionService = scope.ServiceProvider.GetService<IChatCompletionService>();
+        if (chatCompletionService is null)
+            return;
         
         OpenAIPromptExecutionSettings executionSettings = new()
         {

@@ -4,7 +4,6 @@ using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
-using SixLabors.ImageSharp;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -95,7 +94,7 @@ public static class UpdateEmojisSlashCommand
             );
 
             var image = new ImageProperties(
-                format: ImageFormat.WebP, 
+                format: ImageFormat.Webp, 
                 data: encoded.ToArray()
             );
 

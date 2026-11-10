@@ -17,7 +17,7 @@ namespace GitcgNetCord.MainApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -40,8 +40,11 @@ namespace GitcgNetCord.MainApp.Migrations
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordCardCodeChannel", b =>
                 {
                     b.Property<decimal>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("SharingDecodeType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

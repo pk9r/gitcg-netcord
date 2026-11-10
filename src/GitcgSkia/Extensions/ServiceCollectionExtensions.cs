@@ -1,4 +1,4 @@
-﻿using GitcgSkia.ImageCreators.Deck.GameBackground;
+using GitcgSkia.ImageCreators.Deck.GameBackground;
 using GitcgSkia.ImageCreators.Deck.Genshincards;
 using Microsoft.Extensions.DependencyInjection;
 

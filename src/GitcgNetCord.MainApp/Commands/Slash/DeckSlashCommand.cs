@@ -113,8 +113,8 @@ public static class DeckSlashCommand
             {
                 SharingDecodeType.ImageGameBackground
                     => deckImageCreatorCollection.GameBackground,
-                SharingDecodeType.ImageSimplest
-                    => deckImageCreatorCollection.Simplest,
+                //SharingDecodeType.ImageSimplest
+                //    => deckImageCreatorCollection.Simplest,
                 SharingDecodeType.ImageGenshincards
                     => deckImageCreatorCollection.Genshincards,
                 // This case should never be hit because of the IsCreateImageType check above.

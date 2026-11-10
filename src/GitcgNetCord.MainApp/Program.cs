@@ -1,5 +1,6 @@
 using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
+using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
 using Microsoft.SemanticKernel;
@@ -23,21 +24,34 @@ builder.Services.AddHybridCache();
 
 builder.AddNpgsqlDbContext<AppDbContext>("gitcgnetcorddb");
 
-builder.Services.AddOpenAIChatCompletion(
-    modelId: builder.Configuration["OpenAiOptions:ModelId"]!,
-    apiKey: builder.Configuration["OpenAiOptions:ApiKey"]!,
-    endpoint: new Uri(builder.Configuration["OpenAiOptions:EndpointUrl"]!)
-);
+var openAiOptions = builder.Configuration
+    .GetSection(OpenAiOptions.ConfigurationSectionName)
+    .Get<OpenAiOptions>();
+
+if (openAiOptions is { Enabled: true }
+    && !string.IsNullOrWhiteSpace(openAiOptions.ModelId)
+    && !string.IsNullOrWhiteSpace(openAiOptions.ApiKey))
+{
+    if (Uri.TryCreate(openAiOptions.EndpointUrl, UriKind.Absolute, out var endpointUri))
+    {
+        builder.Services.AddOpenAIChatCompletion(
+            modelId: openAiOptions.ModelId,
+            apiKey: openAiOptions.ApiKey,
+            endpoint: endpointUri
+        );
+    }
+    else
+    {
+        builder.Services.AddOpenAIChatCompletion(
+            modelId: openAiOptions.ModelId,
+            apiKey: openAiOptions.ApiKey
+        );
+    }
+}
 
 builder.Services.AddNetCordServices();
 builder.Services.AddHoyolabServices();
 builder.Services.AddAppServices();
-
-builder.Services.AddOpenAIChatCompletion(
-    modelId: builder.Configuration["OpenAiOptions:ModelId"]!,
-    apiKey: builder.Configuration["OpenAiOptions:ApiKey"]!,
-    endpoint: new Uri(builder.Configuration["OpenAiOptions:EndpointUrl"]!)
-);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

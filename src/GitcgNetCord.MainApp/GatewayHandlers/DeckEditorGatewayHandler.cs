@@ -1,4 +1,4 @@
-﻿using GitcgNetCord.MainApp.Models;
+using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
@@ -39,7 +39,9 @@ public class DeckEditorGatewayHandler(
         ];
 
         var kernel = new Kernel(scope.ServiceProvider, plugins);
-        var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        var chatCompletionService = scope.ServiceProvider.GetService<IChatCompletionService>();
+        if (chatCompletionService is null)
+            return;
 
         OpenAIPromptExecutionSettings executionSettings = new()
         {

@@ -62,7 +62,8 @@ public class HoyolabHttpClientService
         _defaultAuthorize = options.Value.DefaultAuthorize;
 
         _httpClient.BaseAddress = new Uri(
-            uriString: "https://sg-public-api.hoyolab.com"
+            //uriString: "https://sg-public-api.hoyolab.com" // out of date
+            uriString: "https://sg-act-public-api.hoyolab.com"
         );
 
         if (_defaultAuthorize == null)

@@ -20,14 +20,14 @@ if (useRemoteRedis)
 
         main.WithReference(redisConnectionString);
     }
-    else
-    {
-        var redis = builder
-            .AddRedis("redis")
-            .WithDataVolume();
-        
-        main.WithReference(redis).WaitFor(redis);
-    }
+}
+else
+{
+    var redis = builder
+        .AddRedis("redis")
+        .WithDataVolume();
+    
+    main.WithReference(redis).WaitFor(redis);
 }
 
 var useRemotePostgres = builder.Configuration
@@ -64,7 +64,7 @@ else
         .WithPgAdmin();
 
     var gitcgnetcorddb = postgres
-        .AddDatabase("gitcgnetcord");
+        .AddDatabase(postgresResourceName, "gitcgnetcord");
 
     main.WithReference(gitcgnetcorddb).WaitFor(gitcgnetcorddb);
 }

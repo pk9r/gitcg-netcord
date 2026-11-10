@@ -1,8 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />
-    <File Path="global.json" />
-    <File Path="NuGet.config" />
     <File Path="README.md" />
     <File Path="LICENSE" />
     <File Path=".gitignore" />
@@ -10,7 +8,9 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj" />
-    <Project Path="src/GitcgPainter/GitcgPainter.csproj" />
+    <Project Path="src/GitcgPainter/GitcgPainter.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
     <Project Path="src/HoyolabHttpClient/HoyolabHttpClient.csproj" />
     <Project Path="src/SharedUtils/SharedUtils.csproj" />
     <Project Path="src\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
