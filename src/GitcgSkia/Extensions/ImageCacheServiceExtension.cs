@@ -76,6 +76,39 @@ public static class ImageCacheServiceExtension
         }
     }
 
+    public static async ValueTask<SKBitmap> LoadBorderedIconAsync(
+        this ImageCacheService imageCacheService,
+        ICardBasic card,
+        SKSizeI size
+    )
+    {
+        var cacheKey = card.GetCacheKeyIconBordered(size);
+
+        var cachedBorderedResizedIcon =
+            await imageCacheService.LoadCachedImageAsync(cacheKey);
+
+        if (cachedBorderedResizedIcon != null)
+            return cachedBorderedResizedIcon;
+
+        var cachedBorderedIcon = await imageCacheService
+            .LoadBorderedIconAsync(card);
+
+        var samplingOptions = new SKSamplingOptions(
+            filter: SKFilterMode.Linear,
+            mipmap: SKMipmapMode.Linear
+        );
+
+        var borderedResizedIcon = cachedBorderedIcon.Resize(
+            size: size,
+            sampling: samplingOptions
+        );
+
+        cachedBorderedResizedIcon = await imageCacheService
+            .CacheImageAsync(cacheKey, borderedResizedIcon);
+
+        return cachedBorderedResizedIcon;
+    }
+
     public static async ValueTask<SKBitmap> LoadArcaneBorderAsync(
         this ImageCacheService imageCacheService
     )
