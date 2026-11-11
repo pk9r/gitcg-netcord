@@ -66,9 +66,9 @@ public static class ImageCacheServiceExtension
 
         using (border)
         {
-            var Icon = await imageCacheService.LoadIconAsync(card);
+            using var icon = await imageCacheService.LoadIconAsync(card);
 
-            var borderedIcon = BorderIcon(icon: Icon, border: border);
+            var borderedIcon = BorderIcon(icon: icon, border: border);
 
             cachedBorderedIcon = await imageCacheService
                 .CacheImageAsync(key: cacheKey, image: borderedIcon);
@@ -91,7 +91,7 @@ public static class ImageCacheServiceExtension
         if (cachedBorderedResizedIcon != null)
             return cachedBorderedResizedIcon;
 
-        var cachedBorderedIcon = await imageCacheService
+        using var cachedBorderedIcon = await imageCacheService
             .LoadBorderedIconAsync(card);
 
         var samplingOptions = new SKSamplingOptions(
@@ -122,7 +122,7 @@ public static class ImageCacheServiceExtension
         using var arcaneBorder = await SkAssetsUtils.LoadArcaneBorderAsync();
 
         // Resize border
-        using var arcaneBorderResized = arcaneBorder.Resize(
+        var arcaneBorderResized = arcaneBorder.Resize(
             size: BorderSize,
             sampling: new SKSamplingOptions(
                 filter: SKFilterMode.Linear,
@@ -151,13 +151,21 @@ public static class ImageCacheServiceExtension
         SKBitmap border
     )
     {
+        ArgumentNullException.ThrowIfNull(icon);
+        ArgumentNullException.ThrowIfNull(border);
+
+        if (border.Handle == IntPtr.Zero)
+            throw new ArgumentException("Border bitmap has been disposed or is invalid.", nameof(border));
+        if (icon.Handle == IntPtr.Zero)
+            throw new ArgumentException("Icon bitmap has been disposed or is invalid.", nameof(icon));
+
         var bitmap = new SKBitmap(border.Info);
         using var canvas = new SKCanvas(bitmap);
 
         using var iconResized = icon.Resize(
             size: border.Info.Size,
             sampling: Utils.DefaultSamplingOptions
-        );
+        ) ?? throw new InvalidOperationException("Failed to resize icon to border size.");
 
         canvas.DrawBitmap(
             bitmap: iconResized,

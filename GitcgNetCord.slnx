@@ -16,6 +16,9 @@
     <Project Path="src\GitcgSharp.Shared\GitcgSharp.Shared.csproj" />
     <Project Path="src\GitcgSkia\GitcgSkia.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests\GitcgSkia.Tests\GitcgSkia.Tests.csproj" />
+  </Folder>
   <Project Path="src/AppHost/AppHost.csproj" />
   <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
 </Solution>

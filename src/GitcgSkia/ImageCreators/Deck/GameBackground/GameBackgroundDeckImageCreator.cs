@@ -69,84 +69,99 @@ public class GameBackgroundDeckImageCreator(
         var roleBitmaps = await Task.WhenAll(roleCardTasks);
         var actionBitmaps = await Task.WhenAll(actionCardTasks);
 
-        using var paint = new SKPaint
+        try
         {
-            IsAntialias = true
-        };
-
-        var currentPosition = SKPoint.Empty;
-
-        // Draw role cards
-        currentPosition.Offset(
-            dx: xRolesBase,
-            dy: yRolesBase
-        );
-        foreach (var cardBitmap in roleBitmaps)
-        {
-            canvas.DrawBitmap(
-                bitmap: cardBitmap,
-                p: currentPosition,
-                sampling: Utils.DefaultSamplingOptions,
-                paint: paint
-            );
-
-            // update position
-            currentPosition.Offset(
-                dx: RoleCardSize.Width + RoleCardSpacing,
-                dy: 0
-            );
-        }
-
-        // Draw action cards
-        var actionCardIndex = 0;
-
-        currentPosition = new SKPoint(
-            x: xActionsBase,
-            y: yActionsBase
-        );
-        foreach (var cardBitmap in actionBitmaps)
-        {
-            canvas.DrawBitmap(
-                bitmap: cardBitmap,
-                p: currentPosition,
-                sampling: Utils.DefaultSamplingOptions,
-                paint: paint
-            );
-
-            // update position
-            actionCardIndex++;
-            var (dx, dy) = (0, 0);
-            if (actionCardIndex % NColumns != 0)
+            using var paint = new SKPaint
             {
-                dx = ActionCardSize.Width + ActionCardSpacing;
-            }
-            else
-            {
-                dy = ActionCardSize.Height + ActionCardSpacing;
-                currentPosition.X = xActionsBase;
-            }
-            currentPosition.Offset(dx, dy);
-        }
-
-        if (!string.IsNullOrWhiteSpace(Options.Author))
-        {
-            using var authorPaint = new SKPaint();
-            authorPaint.Color = Color.White.ToSkColor();
-            authorPaint.IsAntialias = true;
-
-            using var authorFont = new SKFont
-            {
-                Typeface = await SkAssetsUtils.LoadAntonRegularFontAsync(),
-                Size = AuthorFontSize
+                IsAntialias = true
             };
 
-            canvas.DrawText(
-                text: Options.Author,
-                p: AuthorLocation,
-                textAlign: SKTextAlign.Left,
-                font: authorFont,
-                paint: authorPaint
+            var currentPosition = SKPoint.Empty;
+
+            // Draw role cards
+            currentPosition.Offset(
+                dx: xRolesBase,
+                dy: yRolesBase
             );
+            foreach (var cardBitmap in roleBitmaps)
+            {
+                canvas.DrawBitmap(
+                    bitmap: cardBitmap,
+                    p: currentPosition,
+                    sampling: Utils.DefaultSamplingOptions,
+                    paint: paint
+                );
+
+                // update position
+                currentPosition.Offset(
+                    dx: RoleCardSize.Width + RoleCardSpacing,
+                    dy: 0
+                );
+            }
+
+            // Draw action cards
+            var actionCardIndex = 0;
+
+            currentPosition = new SKPoint(
+                x: xActionsBase,
+                y: yActionsBase
+            );
+            foreach (var cardBitmap in actionBitmaps)
+            {
+                canvas.DrawBitmap(
+                    bitmap: cardBitmap,
+                    p: currentPosition,
+                    sampling: Utils.DefaultSamplingOptions,
+                    paint: paint
+                );
+
+                // update position
+                actionCardIndex++;
+                var (dx, dy) = (0, 0);
+                if (actionCardIndex % NColumns != 0)
+                {
+                    dx = ActionCardSize.Width + ActionCardSpacing;
+                }
+                else
+                {
+                    dy = ActionCardSize.Height + ActionCardSpacing;
+                    currentPosition.X = xActionsBase;
+                }
+                currentPosition.Offset(dx, dy);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Options.Author))
+            {
+                using var authorPaint = new SKPaint();
+                authorPaint.Color = Color.White.ToSkColor();
+                authorPaint.IsAntialias = true;
+
+                using var authorFont = new SKFont
+                {
+                    Typeface = await SkAssetsUtils.LoadAntonRegularFontAsync(),
+                    Size = AuthorFontSize
+                };
+
+                canvas.DrawText(
+                    text: Options.Author,
+                    p: AuthorLocation,
+                    textAlign: SKTextAlign.Left,
+                    font: authorFont,
+                    paint: authorPaint
+                );
+            }
+        }
+        finally
+        {
+            foreach (var cardBitmap in roleBitmaps)
+            {
+                cardBitmap?.Dispose();
+            }
+
+            foreach (var cardBitmap in actionBitmaps)
+            {
+                cardBitmap?.Dispose();
+            }
         }
 
         // Encode image to PNG

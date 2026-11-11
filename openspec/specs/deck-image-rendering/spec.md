@@ -17,6 +17,10 @@ The system SHALL render a deck containing 3 role cards and 30 action cards into 
 - **WHEN** Simplest deck rendering options specify a custom background color and action card column count
 - **THEN** the system adjusts the canvas width and row count accordingly, fills the specified background color, and renders all 30 action cards in the calculated grid.
 
+#### Scenario: Deck containing Arcane Legend cards
+- **WHEN** a deck containing one or more Arcane Legend action cards is rendered
+- **THEN** the system applies the arcane card border and renders the image stream without crashing or leaking native graphic resources.
+
 ### Requirement: Discord slash command Simplest image decoding
 The Discord bot application SHALL support decoding deck codes into the Simplest image format via the deck slash command.
 

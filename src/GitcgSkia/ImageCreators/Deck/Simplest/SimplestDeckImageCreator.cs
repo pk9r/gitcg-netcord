@@ -80,55 +80,70 @@ public class SimplestDeckImageCreator(
         var roleBitmaps = await Task.WhenAll(roleCardTasks);
         var actionBitmaps = await Task.WhenAll(actionCardTasks);
 
-        using var paint = new SKPaint
+        try
         {
-            IsAntialias = true
-        };
-
-        // Draw role cards
-        var roleCardsX = widthImage / 2 - roleCardsWidth / 2;
-        var roleCardsY = ImagePadding;
-
-        var currentX = (float)roleCardsX;
-        var currentY = (float)roleCardsY;
-
-        foreach (var cardBitmap in roleBitmaps)
-        {
-            canvas.DrawBitmap(
-                bitmap: cardBitmap,
-                x: currentX,
-                y: currentY,
-                sampling: Utils.DefaultSamplingOptions,
-                paint: paint
-            );
-
-            currentX += RoleCardSize.Width + RoleCardHorizontalGap;
-        }
-
-        // Draw action cards
-        currentX = ActionCardsPosition.X;
-        currentY = ActionCardsPosition.Y;
-        var index = 0;
-
-        foreach (var cardBitmap in actionBitmaps)
-        {
-            canvas.DrawBitmap(
-                bitmap: cardBitmap,
-                x: currentX,
-                y: currentY,
-                sampling: Utils.DefaultSamplingOptions,
-                paint: paint
-            );
-
-            index++;
-            if (index % actionCardColumns != 0)
+            using var paint = new SKPaint
             {
-                currentX += ActionCardSize.Width + ActionCardGap;
+                IsAntialias = true
+            };
+
+            // Draw role cards
+            var roleCardsX = widthImage / 2 - roleCardsWidth / 2;
+            var roleCardsY = ImagePadding;
+
+            var currentX = (float)roleCardsX;
+            var currentY = (float)roleCardsY;
+
+            foreach (var cardBitmap in roleBitmaps)
+            {
+                canvas.DrawBitmap(
+                    bitmap: cardBitmap,
+                    x: currentX,
+                    y: currentY,
+                    sampling: Utils.DefaultSamplingOptions,
+                    paint: paint
+                );
+
+                currentX += RoleCardSize.Width + RoleCardHorizontalGap;
             }
-            else
+
+            // Draw action cards
+            currentX = ActionCardsPosition.X;
+            currentY = ActionCardsPosition.Y;
+            var index = 0;
+
+            foreach (var cardBitmap in actionBitmaps)
             {
-                currentX = ActionCardsPosition.X;
-                currentY += ActionCardSize.Height + ActionCardGap;
+                canvas.DrawBitmap(
+                    bitmap: cardBitmap,
+                    x: currentX,
+                    y: currentY,
+                    sampling: Utils.DefaultSamplingOptions,
+                    paint: paint
+                );
+
+                index++;
+                if (index % actionCardColumns != 0)
+                {
+                    currentX += ActionCardSize.Width + ActionCardGap;
+                }
+                else
+                {
+                    currentX = ActionCardsPosition.X;
+                    currentY += ActionCardSize.Height + ActionCardGap;
+                }
+            }
+        }
+        finally
+        {
+            foreach (var cardBitmap in roleBitmaps)
+            {
+                cardBitmap?.Dispose();
+            }
+
+            foreach (var cardBitmap in actionBitmaps)
+            {
+                cardBitmap?.Dispose();
             }
         }
 

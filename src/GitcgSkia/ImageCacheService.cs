@@ -62,7 +62,7 @@ public class ImageCacheService(
         string key, SKBitmap image
     )
     {
-        var data = image.Encode(
+        using var data = image.Encode(
             format: SKEncodedImageFormat.Png,
             quality: 100
         );
