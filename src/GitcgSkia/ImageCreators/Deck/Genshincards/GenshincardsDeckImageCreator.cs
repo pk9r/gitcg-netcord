@@ -81,7 +81,6 @@ public class GenshincardsDeckImageCreator(
             ActionCardSpacing * (Utils.NumberActionCards - 1) +
             ImagePaddingY;
 
-        //using var image = new Image<Rgba32>(imageWidth, imageHeight);
         using var image = new SKBitmap(imageWidth, imageHeight);
         using var canvas = new SKCanvas(image);
 
@@ -95,38 +94,26 @@ public class GenshincardsDeckImageCreator(
             IsAntialias = true,
         };
 
-        ICollection<Task> drawTasks = [];
-
-        var currentPosition = SKPointI.Empty;
-
-        // Draw role cards
+        // Calculate positions for role cards
+        List<(Role roleCard, SKPointI position)> roleCardsToDraw = [];
         var roleCardsWidth = Utils.CalcRoleCardsWidth(
             roleCardWidth: RoleCardSize.Width,
             roleCardSpacing: RoleCardSpacing
         );
         var roleCardsOffset = DeckWidth / 2 - roleCardsWidth / 2;
 
-        currentPosition.Y = ImagePaddingY;
-
         for (var i = 0; i < decksCount; i++)
         {
             var deck = decks[i];
-
             var indexOffset = (DeckWidth + DeckSpacing) * i;
-
-            currentPosition.X = ImagePaddingX + indexOffset + roleCardsOffset;
+            var currentPosition = new SKPointI(
+                x: ImagePaddingX + indexOffset + roleCardsOffset,
+                y: ImagePaddingY
+            );
 
             foreach (var roleCard in deck.RoleCards)
             {
-                drawTasks.Add(
-                    LoadAndDrawRoleCardAsync(
-                        canvas: canvas,
-                        roleCard: roleCard,
-                        position: currentPosition,
-                        paint: paint
-                    ).AsTask()
-                );
-
+                roleCardsToDraw.Add((roleCard, currentPosition));
                 currentPosition.Offset(
                     dx: RoleCardSize.Width + RoleCardSpacing,
                     dy: 0
@@ -134,14 +121,14 @@ public class GenshincardsDeckImageCreator(
             }
         }
 
+        // Calculate positions for action cards
+        List<(Action actionCard, SKPointI position, int quantity)> actionCardsToDraw = [];
         var maxY = 0;
         for (var i = 0; i < decksCount; i++)
         {
             var deck = decks[i];
-
             var indexOffset = (DeckWidth + DeckSpacing) * i;
-
-            currentPosition = new SKPointI(
+            var currentPosition = new SKPointI(
                 x: ImagePaddingX + indexOffset,
                 y: ActionCardsY
             );
@@ -158,16 +145,7 @@ public class GenshincardsDeckImageCreator(
                     actionCard: out var actionCard
                 );
 
-                drawTasks.Add(
-                    LoadAndDrawActionCardAsync(
-                        canvas: canvas,
-                        actionCard: actionCard,
-                        position: currentPosition,
-                        quantity: quantity,
-                        paint: paint
-                    ).AsTask()
-                );
-
+                actionCardsToDraw.Add((actionCard, currentPosition, quantity));
                 actionCardIndex += quantity;
 
                 currentPosition.Offset(
@@ -182,7 +160,54 @@ public class GenshincardsDeckImageCreator(
             }
         }
 
-        await Task.WhenAll(drawTasks);
+        // Phase 1: Preload role and action card bitmaps concurrently
+        var roleCardTasks = roleCardsToDraw
+            .Select(async item =>
+            {
+                var bitmap = await LoadRoleCardBitmapAsync(item.roleCard);
+                return (Bitmap: bitmap, item.position);
+            })
+            .ToArray();
+
+        var actionCardTasks = actionCardsToDraw
+            .Select(async item =>
+            {
+                var bitmap = await LoadActionCardAsync(item.actionCard);
+                return (item.actionCard, item.position, item.quantity, LoadedCard: bitmap);
+            })
+            .ToArray();
+
+        var preloadedRoleCards = await Task.WhenAll(roleCardTasks);
+        var preloadedActionCards = await Task.WhenAll(actionCardTasks);
+
+        // Phase 2: Sequential rendering on canvas
+        foreach (var (cardBitmap, position) in preloadedRoleCards)
+        {
+            using (cardBitmap)
+            {
+                canvas.DrawBitmap(
+                    bitmap: cardBitmap,
+                    p: position,
+                    sampling: Utils.DefaultSamplingOptions,
+                    paint: paint
+                );
+            }
+        }
+
+        foreach (var (actionCard, position, quantity, loadedCard) in preloadedActionCards)
+        {
+            using (loadedCard)
+            {
+                await DrawActionCardContentAsync(
+                    canvas: canvas,
+                    actionCard: actionCard,
+                    loadedCard: loadedCard,
+                    position: position,
+                    quantity: quantity,
+                    paint: paint
+                );
+            }
+        }
 
         imageHeight = maxY + ImagePaddingY;
 
@@ -201,42 +226,33 @@ public class GenshincardsDeckImageCreator(
         return data.AsStream();
     }
 
-    private async ValueTask LoadAndDrawRoleCardAsync(
-        SKCanvas canvas,
-        Role roleCard,
-        SKPointI position,
-        SKPaint paint
-    )
+    private async ValueTask<SKBitmap> LoadRoleCardBitmapAsync(Role roleCard)
     {
         using var cardImage = await imageCacheService
             .LoadIconSmallAsync(roleCard);
 
-        using var cardResized = cardImage.Resize(
+        var cardResized = cardImage.Resize(
             size: RoleCardSize,
             sampling: Utils.DefaultSamplingOptions
         );
 
-        canvas.DrawBitmap(
-            bitmap: cardResized,
-            p: position,
-            paint: paint
-        );
+        return cardResized;
     }
 
-    private async ValueTask LoadAndDrawActionCardAsync(
+    private async ValueTask DrawActionCardContentAsync(
         SKCanvas canvas,
         Action actionCard,
+        SKBitmap loadedCard,
         SKPointI position,
         int quantity,
         SKPaint paint
     )
     {
-        using var loadedCard = await LoadActionCardAsync(actionCard);
-
         // Draw card image
         canvas.DrawBitmap(
             bitmap: loadedCard,
             p: position,
+            sampling: Utils.DefaultSamplingOptions,
             paint: paint
         );
 
@@ -247,13 +263,6 @@ public class GenshincardsDeckImageCreator(
             height: ActionCardCenterOffsetY
         );
 
-        //var cardNameTextOptions = new RichTextOptions(ActionCardNameFont)
-        //{
-        //    Origin = cardNamePosition,
-        //    WrappingLength = ActionCardNameWrappingLength,
-        //    VerticalAlignment = VerticalAlignment.Center,
-        //    LineSpacing = 1.2f
-        //};
         var cardNamePosition = position + cardNameOffset;
 
         using var cardNameBitmap = new SKBitmap(
@@ -324,6 +333,7 @@ public class GenshincardsDeckImageCreator(
             cardNameCanvas.DrawText(
                 text: run,
                 p: new SKPoint(0, cardNameRunOffsetY),
+                textAlign: SKTextAlign.Left,
                 font: cardNameFont,
                 paint: cardNamePaint
             );
@@ -340,6 +350,7 @@ public class GenshincardsDeckImageCreator(
                 ActionCardNameWrappingLength,
                 cardNameBitmapHeight
             ),
+            sampling: Utils.DefaultSamplingOptions,
             paint: paint
         );
 
@@ -363,13 +374,13 @@ public class GenshincardsDeckImageCreator(
 
         var skillElement = actionCard.GetSkillElement();
 
-        using var SkillValueFont = new SKFont
+        using var skillValueFont = new SKFont
         {
             Typeface = await LoadSkillValueTypefaceAsync(),
             Size = SkillValueFontSize,
         };
 
-        using var SkillValueFontPaint = new SKPaint
+        using var skillValueFontPaint = new SKPaint
         {
             IsAntialias = true,
             Color = skillElement.GetColor(),
@@ -386,13 +397,15 @@ public class GenshincardsDeckImageCreator(
             canvas.DrawText(
                 text: $"{actionCard.SkillValue}",
                 p: skillValuePosition - new SKSizeI(11, 24),
-                font: SkillValueFont,
-                paint: SkillValueFontPaint
+                textAlign: SKTextAlign.Left,
+                font: skillValueFont,
+                paint: skillValueFontPaint
             );
             canvas.DrawText(
                 text: $"{actionCard.SkillValue2}",
                 p: skillValuePosition + new SKSizeI(9, 24),
-                font: SkillValueFont,
+                textAlign: SKTextAlign.Left,
+                font: skillValueFont,
                 paint: skillValue2Paint
             );
         }
@@ -401,12 +414,13 @@ public class GenshincardsDeckImageCreator(
             canvas.DrawText(
                 text: $"{actionCard.SkillValue}",
                 p: skillValuePosition + new SKSizeI(0, 24),
-                font: SkillValueFont,
-                paint: SkillValueFontPaint
+                textAlign: SKTextAlign.Left,
+                font: skillValueFont,
+                paint: skillValueFontPaint
             );
         }
 
-        // draw skill elements
+        // Draw skill elements
         using var elementIcon = await skillElement.LoadElementIconAsync();
         using var resizedElementIcon = elementIcon.Resize(
             size: new SKSizeI(
@@ -419,11 +433,11 @@ public class GenshincardsDeckImageCreator(
         {
             const int IconsWidth = SkillElementSize * 2 + 3;
 
-            var SkillElementIconsOffset = new SKSizeI(
+            var skillElementIconsOffset = new SKSizeI(
                 width: 8 - (IconsWidth / 2),
                 height: SkillValueFontSize
             );
-            var skillElementPosition = skillValuePosition + SkillElementIconsOffset;
+            var skillElementPosition = skillValuePosition + skillElementIconsOffset;
 
             var skillElementIconOffset2 = new SKSizeI(
                 width: SkillElementSize,
@@ -443,11 +457,13 @@ public class GenshincardsDeckImageCreator(
             canvas.DrawBitmap(
                 bitmap: resizedElementIcon,
                 p: skillElementPosition,
+                sampling: Utils.DefaultSamplingOptions,
                 paint: paint
             );
             canvas.DrawBitmap(
                 bitmap: resizedElementIcon2,
                 p: skillElementPosition2,
+                sampling: Utils.DefaultSamplingOptions,
                 paint: paint
             );
         }
@@ -463,6 +479,7 @@ public class GenshincardsDeckImageCreator(
             canvas.DrawBitmap(
                 bitmap: resizedElementIcon,
                 p: skillValueElementIconPosition,
+                sampling: Utils.DefaultSamplingOptions,
                 paint: paint
             );
         }
@@ -479,7 +496,6 @@ public class GenshincardsDeckImageCreator(
             Size = QuantityFontSize,
         };
 
-
         using var quantityPaint = new SKPaint
         {
             IsAntialias = true,
@@ -491,6 +507,7 @@ public class GenshincardsDeckImageCreator(
         canvas.DrawText(
             text: $"×{quantity}",
             p: quantityPosition + new SKPointI(0, 16),
+            textAlign: SKTextAlign.Left,
             font: quantityFont,
             paint: quantityPaint
         );
@@ -501,6 +518,7 @@ public class GenshincardsDeckImageCreator(
         canvas.DrawText(
             text: $"×{quantity}",
             p: quantityPosition + new SKPointI(0, 16),
+            textAlign: SKTextAlign.Left,
             font: quantityFont,
             paint: quantityPaint
         );
@@ -564,6 +582,7 @@ public class GenshincardsDeckImageCreator(
             bitmap: resized,
             source: SKRect.Create(cropPosition, ActionCardCroppedSize),
             dest: destRect,
+            sampling: Utils.DefaultSamplingOptions,
             paint: paint
         );
 

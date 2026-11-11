@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using GitcgSkia;
 using HoyolabHttpClient.Extensions;
 using HoyolabHttpClient.Models;
 using HoyolabHttpClient.Models.Interfaces;
@@ -155,20 +156,21 @@ public static class ImageCacheServiceExtension
 
         using var iconResized = icon.Resize(
             size: border.Info.Size,
-            sampling: new SKSamplingOptions(
-                filter: SKFilterMode.Linear,
-                mipmap: SKMipmapMode.Linear
-            )
+            sampling: Utils.DefaultSamplingOptions
         );
 
         canvas.DrawBitmap(
             bitmap: iconResized,
-            x: 0f, y: 0f
+            x: 0f,
+            y: 0f,
+            sampling: Utils.DefaultSamplingOptions
         );
 
         canvas.DrawBitmap(
             bitmap: border,
-            x: 0f, y: 0f
+            x: 0f,
+            y: 0f,
+            sampling: Utils.DefaultSamplingOptions
         );
 
         return bitmap;

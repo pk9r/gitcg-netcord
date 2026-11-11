@@ -33,7 +33,7 @@ public class GameBackgroundDeckImageCreator(
         using var image = new SKBitmap(background.Info);
         using var canvas = new SKCanvas(image);
 
-        canvas.DrawBitmap(background, 0, 0);
+        canvas.DrawBitmap(background, 0, 0, Utils.DefaultSamplingOptions);
         background.Dispose();
 
         var xCenter = image.Width / 2;
@@ -57,7 +57,23 @@ public class GameBackgroundDeckImageCreator(
             ActionCardPaddingY
         );
 
-        List<Task> drawTasks = [];
+        // Preload all role and action card bitmaps concurrently
+        var roleCardTasks = deckData.RoleCards
+            .Select(roleCard => imageCacheService.LoadBorderedIconAsync(roleCard, RoleCardSize).AsTask())
+            .ToArray();
+
+        var actionCardTasks = deckData.ActionCards
+            .Select(actionCard => imageCacheService.LoadBorderedIconAsync(actionCard, ActionCardSize).AsTask())
+            .ToArray();
+
+        var roleBitmaps = await Task.WhenAll(roleCardTasks);
+        var actionBitmaps = await Task.WhenAll(actionCardTasks);
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = true
+        };
+
         var currentPosition = SKPoint.Empty;
 
         // Draw role cards
@@ -65,15 +81,13 @@ public class GameBackgroundDeckImageCreator(
             dx: xRolesBase,
             dy: yRolesBase
         );
-        foreach (var roleCard in deckData.RoleCards)
+        foreach (var cardBitmap in roleBitmaps)
         {
-            drawTasks.Add(
-                item: LoadAndDrawCardAsync(
-                    image: canvas,
-                    position: currentPosition,
-                    card: roleCard,
-                    size: RoleCardSize
-                )
+            canvas.DrawBitmap(
+                bitmap: cardBitmap,
+                p: currentPosition,
+                sampling: Utils.DefaultSamplingOptions,
+                paint: paint
             );
 
             // update position
@@ -90,15 +104,13 @@ public class GameBackgroundDeckImageCreator(
             x: xActionsBase,
             y: yActionsBase
         );
-        foreach (var actionCard in deckData.ActionCards)
+        foreach (var cardBitmap in actionBitmaps)
         {
-            drawTasks.Add(
-                item: LoadAndDrawCardAsync(
-                    image: canvas,
-                    position: currentPosition,
-                    card: actionCard,
-                    size: ActionCardSize
-                )
+            canvas.DrawBitmap(
+                bitmap: cardBitmap,
+                p: currentPosition,
+                sampling: Utils.DefaultSamplingOptions,
+                paint: paint
             );
 
             // update position
@@ -112,7 +124,6 @@ public class GameBackgroundDeckImageCreator(
             {
                 dy = ActionCardSize.Height + ActionCardSpacing;
                 currentPosition.X = xActionsBase;
-
             }
             currentPosition.Offset(dx, dy);
         }
@@ -132,12 +143,11 @@ public class GameBackgroundDeckImageCreator(
             canvas.DrawText(
                 text: Options.Author,
                 p: AuthorLocation,
+                textAlign: SKTextAlign.Left,
                 font: authorFont,
                 paint: authorPaint
             );
         }
-
-        await Task.WhenAll(tasks: drawTasks);
 
         // Encode image to PNG
         var data = image.Encode(
@@ -146,64 +156,5 @@ public class GameBackgroundDeckImageCreator(
         );
 
         return data.AsStream();
-    }
-
-    private async Task LoadAndDrawCardAsync(
-        SKCanvas image, SKPoint position,
-        ICardBasic card, SKSizeI size
-    )
-    {
-        using var cachedCardImage =
-            await LoadBorderedIconAsync(
-                card: card,
-                size: size
-            );
-
-        image.DrawBitmap(
-            bitmap: cachedCardImage,
-            p: position,
-            paint: new SKPaint
-            {
-                IsAntialias = true
-            }
-        );
-    }
-
-    private async Task<SKBitmap> LoadBorderedIconAsync(
-        ICardBasic card, SKSizeI size
-    )
-    {
-        var cacheKey = card.GetCacheKeyIconBordered(size);
-
-        var cachedBorderedResizedIcon =
-            await imageCacheService.LoadCachedImageAsync(cacheKey);
-
-        if (cachedBorderedResizedIcon != null)
-            return cachedBorderedResizedIcon;
-
-        var cachedBorderedIcon = await imageCacheService
-            .LoadBorderedIconAsync(card);
-
-        var borderedResizedIcon = ResizeIcon(cachedBorderedIcon, size);
-
-        cachedBorderedResizedIcon = await imageCacheService
-            .CacheImageAsync(cacheKey, borderedResizedIcon);
-
-        return cachedBorderedResizedIcon;
-    }
-
-    private static SKBitmap ResizeIcon(SKBitmap icon, SKSizeI size)
-    {
-        var samplingOptions = new SKSamplingOptions(
-            filter: SKFilterMode.Linear,
-            mipmap: SKMipmapMode.Linear
-        );
-
-        var iconResized = icon.Resize(
-            size: size,
-            sampling: samplingOptions
-        );
-
-        return iconResized;
     }
 }
