@@ -1,6 +1,8 @@
+using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.GatewayHandlers;
+using GitcgNetCord.MainApp.Infrastructure;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Modules;
@@ -27,6 +29,7 @@ public static class Extensions
     {
         // Feature modules
         host.AddCardCodeModule();
+        host.AddCardSnapshotModule();
         host.AddDuelModule();
         host.AddHoyolabAccountModule();
         host.AddHoyolabGcgModule();
@@ -89,6 +92,11 @@ public static class Extensions
         services.AddScoped<DiscordCardCodeChannelService>();
         services.AddScoped<DiscordUserService>();
         services.AddScoped<HoyolabAccountService>();
+        services.AddScoped<CardSnapshotService>();
+        services.AddScoped<GameVersionService>();
+        services.AddScoped<CardSnapshotAutocompleteProvider>();
+        services.AddSingleton<ICardStatsCalculator, CardStatsCalculator>();
+        services.AddHostedService<VersionSnapshotWorker>();
 
         services.AddScoped<DeckEditorPlugin>();
 

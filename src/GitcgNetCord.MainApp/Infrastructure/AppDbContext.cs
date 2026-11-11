@@ -1,5 +1,7 @@
-﻿using GitcgNetCord.MainApp.Entities;
+﻿using System.Text.Json;
+using GitcgNetCord.MainApp.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace GitcgNetCord.MainApp.Infrastructure;
 
@@ -9,6 +11,8 @@ public class AppDbContext : DbContext
     public DbSet<HoyolabAccount> HoyolabAccounts { get; set; } = null!;
     public DbSet<ActiveHoyolabAccount> ActiveHoyolabAccounts { get; set; } = null!;
     public DbSet<DiscordCardCodeChannel> DiscordCardCodeChannels { get; set; } = null!;
+    public DbSet<CardSnapshot> CardSnapshots { get; set; } = null!;
+    public DbSet<GameVersion> GameVersions { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -48,6 +52,43 @@ public class AppDbContext : DbContext
             config.Property(x => x.SharingDecodeType)
                 .HasConversion<string>();
             config.HasIndex(x => x.GuildId);
+        });
+
+        builder.Entity<GameVersion>(config =>
+        {
+            config.Property(x => x.VersionNumber).HasMaxLength(20);
+            config.Property(x => x.Name).HasMaxLength(100);
+            config.HasIndex(x => x.VersionNumber).IsUnique();
+        });
+
+        var cardDataComparer = new ValueComparer<Dictionary<int, CardStatSummary>>(
+            (d1, d2) => d1 != null && d2 != null && d1.Count == d2.Count && !d1.Except(d2).Any(),
+            d => d.Aggregate(0, (a, p) => HashCode.Combine(a, p.Key.GetHashCode(), p.Value.GetHashCode())),
+            d => new Dictionary<int, CardStatSummary>(d)
+        );
+
+        builder.Entity<CardSnapshot>(config =>
+        {
+            config.Property(x => x.Name).HasMaxLength(100);
+            config.Property(x => x.SnapshotType)
+                .HasConversion<string>();
+            config.Property(x => x.CardData)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<Dictionary<int, CardStatSummary>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<int, CardStatSummary>()
+                );
+            config.Property(x => x.CardData)
+                .Metadata
+                .SetValueComparer(cardDataComparer);
+
+            config.HasIndex(x => new { x.HoyolabAccountId, x.Name });
+            config.HasIndex(x => x.DiscordUserId);
+
+            config.HasOne(x => x.HoyolabAccount)
+                .WithMany(x => x.CardSnapshots)
+                .HasForeignKey(x => x.HoyolabAccountId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(builder);

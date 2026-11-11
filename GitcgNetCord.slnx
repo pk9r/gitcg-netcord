@@ -9,7 +9,7 @@
   <Folder Name="/src/">
     <Project Path="src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj" />
     <Project Path="src/GitcgPainter/GitcgPainter.csproj">
-      <Build Solution="*|*" Project="false" />
+      <Build Project="false" />
     </Project>
     <Project Path="src/HoyolabHttpClient/HoyolabHttpClient.csproj" />
     <Project Path="src/SharedUtils/SharedUtils.csproj" />
@@ -17,6 +17,7 @@
     <Project Path="src\GitcgSkia\GitcgSkia.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GitcgNetCord.MainApp.Tests/GitcgNetCord.MainApp.Tests.csproj" />
     <Project Path="tests\GitcgSkia.Tests\GitcgSkia.Tests.csproj" />
   </Folder>
   <Project Path="src/AppHost/AppHost.csproj" />

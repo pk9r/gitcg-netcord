@@ -11,4 +11,5 @@ public class HoyolabAccount
     public string Region { get; set; } = string.Empty;
 
     public DiscordUser DiscordUser { get; set; } = null!;
+    public ICollection<CardSnapshot> CardSnapshots { get; set; } = [];
 }

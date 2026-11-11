@@ -1,8 +1,11 @@
 using System.Collections.Immutable;
 using System.Drawing;
 using System.Text;
+using GitcgNetCord.MainApp.Commands.Autocompletes;
+using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Extensions;
+using GitcgNetCord.MainApp.Infrastructure;
 using HoyolabHttpClient;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -15,6 +18,27 @@ public static class CardSlashCommand
         HoyolabHttpClientService hoyolab,
         IServiceProvider serviceProvider,
         ApplicationCommandContext context,
+        [
+            SlashCommandParameter(
+                Description = "Stats for a specific game version (e.g. 4.7)",
+                AutocompleteProviderType = typeof(CardSnapshotAutocompleteProvider)
+            )
+        ]
+        string? version = null,
+        [
+            SlashCommandParameter(
+                Description = "Stats starting from this milestone (version or snapshot name)",
+                AutocompleteProviderType = typeof(CardSnapshotAutocompleteProvider)
+            )
+        ]
+        string? from = null,
+        [
+            SlashCommandParameter(
+                Description = "Stats up to this milestone (default: Present)",
+                AutocompleteProviderType = typeof(CardSnapshotAutocompleteProvider)
+            )
+        ]
+        string? to = null,
         [
             SlashCommandParameter(
                 Description = "Minimum use count for a card to be considered. Default: 1%."
@@ -37,6 +61,12 @@ public static class CardSlashCommand
     {
         var activeHoyolabAccountService = serviceProvider
             .GetRequiredService<ActiveHoyolabAccountService>();
+        var cardSnapshotService = serviceProvider
+            .GetRequiredService<CardSnapshotService>();
+        var gameVersionService = serviceProvider
+            .GetRequiredService<GameVersionService>();
+        var calculator = serviceProvider
+            .GetRequiredService<ICardStatsCalculator>();
 
         await context.Interaction.SendResponseAsync(
             InteractionCallback.DeferredMessage()
@@ -100,120 +130,175 @@ public static class CardSlashCommand
             return;
         }
 
+        CardSnapshot? startSnapshot = null;
+        CardSnapshot? endSnapshot = null;
+        string periodDescription = "All-time";
+
+        if (!string.IsNullOrWhiteSpace(version))
+        {
+            var ver = version.Trim();
+            startSnapshot = await cardSnapshotService.GetSnapshotByNameAsync(hoyolabAccount.Id, ver);
+            if (startSnapshot == null)
+            {
+                var earliest = await cardSnapshotService.GetEarliestSnapshotAsync(hoyolabAccount.Id);
+                var earliestMsg = earliest != null
+                    ? $" Your earliest available snapshot is '{earliest.Name}' ({earliest.CreatedAt:yyyy-MM-dd})."
+                    : " You do not have any snapshots yet.";
+
+                await context.Interaction.ModifyResponseAsync(message =>
+                {
+                    message.AddEmbeds(new EmbedProperties()
+                        .WithTitle("Data Not Found")
+                        .WithDescription($"No snapshot found for version **{ver}**.{earliestMsg}")
+                        .WithColor(Color.Orange.ToNetCordColor())
+                    );
+                });
+                return;
+            }
+
+            var nextVersion = await gameVersionService.GetNextVersionAsync(ver);
+            if (nextVersion != null)
+            {
+                endSnapshot = await cardSnapshotService.GetSnapshotByNameAsync(hoyolabAccount.Id, nextVersion.VersionNumber);
+            }
+
+            periodDescription = endSnapshot != null
+                ? $"Version {ver} ({ver} to {nextVersion?.VersionNumber})"
+                : $"Version {ver} ({ver} to Present)";
+        }
+        else if (!string.IsNullOrWhiteSpace(from))
+        {
+            var fromName = from.Trim();
+            startSnapshot = await cardSnapshotService.GetSnapshotByNameAsync(hoyolabAccount.Id, fromName);
+            if (startSnapshot == null)
+            {
+                var earliest = await cardSnapshotService.GetEarliestSnapshotAsync(hoyolabAccount.Id);
+                var earliestMsg = earliest != null
+                    ? $" Your earliest available snapshot is '{earliest.Name}' ({earliest.CreatedAt:yyyy-MM-dd})."
+                    : " You do not have any snapshots yet.";
+
+                await context.Interaction.ModifyResponseAsync(message =>
+                {
+                    message.AddEmbeds(new EmbedProperties()
+                        .WithTitle("Data Not Found")
+                        .WithDescription($"No snapshot found for starting point **{fromName}**.{earliestMsg}")
+                        .WithColor(Color.Orange.ToNetCordColor())
+                    );
+                });
+                return;
+            }
+
+            var toName = to?.Trim();
+            if (!string.IsNullOrWhiteSpace(toName) &&
+                !toName.Equals("current", StringComparison.OrdinalIgnoreCase) &&
+                !toName.Equals("live", StringComparison.OrdinalIgnoreCase) &&
+                !toName.Equals("present", StringComparison.OrdinalIgnoreCase))
+            {
+                endSnapshot = await cardSnapshotService.GetSnapshotByNameAsync(hoyolabAccount.Id, toName);
+                if (endSnapshot == null)
+                {
+                    await context.Interaction.ModifyResponseAsync(message =>
+                    {
+                        message.AddEmbeds(new EmbedProperties()
+                            .WithTitle("Data Not Found")
+                            .WithDescription($"No snapshot found for end point **{toName}**.")
+                            .WithColor(Color.Orange.ToNetCordColor())
+                        );
+                    });
+                    return;
+                }
+
+                periodDescription = $"From {startSnapshot.Name} ({startSnapshot.CreatedAt:yyyy-MM-dd}) to {endSnapshot.Name} ({endSnapshot.CreatedAt:yyyy-MM-dd})";
+            }
+            else
+            {
+                periodDescription = $"From {startSnapshot.Name} ({startSnapshot.CreatedAt:yyyy-MM-dd}) to Present";
+            }
+        }
+
+        var result = calculator.Calculate(
+            allCardsMetadata: data.CardList,
+            startSnapshot: startSnapshot?.CardData,
+            endSnapshot: endSnapshot?.CardData,
+            minUseCount: minUseCount,
+            topWinRateCount: topWinRateCount,
+            topUseCount: topUseCount
+        );
+
+        if (result.TotalGames == 0)
+        {
+            await context.Interaction.ModifyResponseAsync(message =>
+            {
+                message.AddEmbeds(new EmbedProperties()
+                    .WithTitle($"{data.Stats.Nickname} - Statistics")
+                    .WithColor(Color.Purple.ToNetCordColor())
+                    .AddFields(
+                        new EmbedFieldProperties().WithName("UID").WithValue(uid).WithInline(),
+                        new EmbedFieldProperties().WithName("Time Period").WithValue(periodDescription).WithInline(),
+                        new EmbedFieldProperties().WithName("Notice").WithValue("No matches were recorded during this period.")
+                    )
+                );
+            });
+            return;
+        }
+
         var appEmojis = await context.Client.Rest
             .GetApplicationEmojisAsync(context.Client.Id);
         var emojis = appEmojis.ToImmutableDictionary(x => x.Name);
 
-        var characters = data.CardList
-            .Where(x => x is { CardType: "CardTypeCharacter" })
-            .ToImmutableArray();
-
-        var gameCount = characters.Sum(x => x.UseCount) / 3;
-        var winCount = characters.Sum(x => x.Proficiency) / 3;
-        var winRate = (float)winCount / gameCount;
-
-        var minUseCountValue = 0;
-        var isPercent = minUseCount.EndsWith('%');
-        if (isPercent)
-        {
-            if (float.TryParse(
-                    minUseCount.AsSpan(0, minUseCount.Length - 1),
-                    out var percent
-                ))
-            {
-                minUseCountValue = (int)(gameCount * percent / 100);
-            }
-        }
-        else
-        {
-            if (!int.TryParse(minUseCount, out minUseCountValue))
-            {
-            }
-        }
-
-        var winRateList = characters
-            .Select(x => new
-            {
-                x.Id, x.Name, x.Proficiency, x.UseCount,
-                WinRate = (float)x.Proficiency / x.UseCount
-            })
-            .Where(x => x.UseCount > minUseCountValue)
-            .ToImmutableArray();
-
-        var bestWinRate = winRateList
-            .OrderByDescending(x => x.WinRate)
-            .ThenByDescending(x => x.UseCount)
-            .Take(topWinRateCount)
-            .ToImmutableArray();
-
-        var lowestWinRate = winRateList
-            .OrderBy(x => x.WinRate)
-            .ThenByDescending(x => x.UseCount)
-            .Take(topWinRateCount)
-            .ToImmutableArray();
-
-        var topCharacterUseCounts = characters
-            .OrderByDescending(x => x.UseCount)
-            .Select(x => new
-            {
-                x.Id, x.Name, x.UseCount
-            })
-            .Take(topUseCount)
-            .ToImmutableArray();
-
-        var topActionUseCounts = data.CardList
-            .Where(x => x.CardType != "CardTypeCharacter")
-            .Select(x => new
-            {
-                x.Id, x.Name, x.UseCount
-            })
-            .OrderByDescending(x => x.UseCount)
-            .Take(topUseCount)
-            .ToImmutableArray();
-
         var bestWinRateStringBuilder = new StringBuilder();
-
-        for (var i = 0; i < bestWinRate.Length; i++)
+        for (var i = 0; i < result.BestWinRateCharacters.Count; i++)
         {
-            var x = bestWinRate[i];
-
+            var x = result.BestWinRateCharacters[i];
+            var emojiStr = emojis.TryGetValue(x.Id.ToString(), out var emoji) ? $"{emoji} " : "";
             bestWinRateStringBuilder.AppendLine(
-                $"{i + 1}. {emojis[x.Id.ToString()]} {x.Name} - " +
-                $"{x.WinRate:P2} " +
-                $"({x.Proficiency}/{x.UseCount})"
+                $"{i + 1}. {emojiStr}{x.Name} - {x.WinRate:P2} ({x.Proficiency}/{x.UseCount})"
             );
+        }
+        if (result.BestWinRateCharacters.Count == 0)
+        {
+            bestWinRateStringBuilder.AppendLine("No matching data for current filters.");
         }
 
         var lowestWinRateStringBuilder = new StringBuilder();
-        for (var i = 0; i < lowestWinRate.Length; i++)
+        for (var i = 0; i < result.LowestWinRateCharacters.Count; i++)
         {
-            var x = lowestWinRate[i];
-
+            var x = result.LowestWinRateCharacters[i];
+            var emojiStr = emojis.TryGetValue(x.Id.ToString(), out var emoji) ? $"{emoji} " : "";
             lowestWinRateStringBuilder.AppendLine(
-                $"{i + 1}. {emojis[x.Id.ToString()]} {x.Name} - " +
-                $"{x.WinRate:P2} " +
-                $"({x.Proficiency}/{x.UseCount})"
+                $"{i + 1}. {emojiStr}{x.Name} - {x.WinRate:P2} ({x.Proficiency}/{x.UseCount})"
             );
+        }
+        if (result.LowestWinRateCharacters.Count == 0)
+        {
+            lowestWinRateStringBuilder.AppendLine("No matching data for current filters.");
         }
 
         var topUseCountsStringBuilder = new StringBuilder();
-        for (var i = 0; i < topCharacterUseCounts.Length; i++)
+        for (var i = 0; i < result.TopUseCharacters.Count; i++)
         {
-            var x = topCharacterUseCounts[i];
-
+            var x = result.TopUseCharacters[i];
+            var emojiStr = emojis.TryGetValue(x.Id.ToString(), out var emoji) ? $"{emoji} " : "";
             topUseCountsStringBuilder.AppendLine(
-                $"{i + 1}. {emojis[x.Id.ToString()]} {x.Name} - {x.UseCount}"
+                $"{i + 1}. {emojiStr}{x.Name} - {x.UseCount}"
             );
+        }
+        if (result.TopUseCharacters.Count == 0)
+        {
+            topUseCountsStringBuilder.AppendLine("No data.");
         }
 
         var topActionUseCountsStringBuilder = new StringBuilder();
-        for (var i = 0; i < topActionUseCounts.Length; i++)
+        for (var i = 0; i < result.TopUseActions.Count; i++)
         {
-            var card = topActionUseCounts[i];
-
+            var card = result.TopUseActions[i];
             topActionUseCountsStringBuilder.AppendLine(
                 $"{i + 1}. {card.Name} - {card.UseCount}"
             );
+        }
+        if (result.TopUseActions.Count == 0)
+        {
+            topActionUseCountsStringBuilder.AppendLine("No data.");
         }
 
         await context.Interaction.ModifyResponseAsync(message =>
@@ -228,12 +313,16 @@ public static class CardSlashCommand
                             .WithValue($"{uid}")
                             .WithInline(),
                         new EmbedFieldProperties()
+                            .WithName("Time Period")
+                            .WithValue(periodDescription)
+                            .WithInline(),
+                        new EmbedFieldProperties()
                             .WithName("Total games")
-                            .WithValue($"{gameCount}")
+                            .WithValue($"{result.TotalGames}")
                             .WithInline(),
                         new EmbedFieldProperties()
                             .WithName("Total wins")
-                            .WithValue($"{winCount} ({winRate:P2})")
+                            .WithValue($"{result.TotalWins} ({result.OverallWinRate:P2})")
                             .WithInline()
                     ),
                 new EmbedProperties()
@@ -251,9 +340,9 @@ public static class CardSlashCommand
                     .WithFooter(new EmbedFooterProperties()
                         .WithText(
                             "Win rate stats only include cards " +
-                            (isPercent
-                                ? $"with use count > {minUseCountValue} ({minUseCount} total games)."
-                                : $"with use count > {minUseCountValue}.")
+                            (result.IsPercentThreshold
+                                ? $"with use count > {result.MinUseCountThreshold} ({result.MinUseCountInput} total games)."
+                                : $"with use count > {result.MinUseCountThreshold}.")
                         )
                     ),
                 new EmbedProperties()

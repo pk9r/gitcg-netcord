@@ -17,7 +17,7 @@ namespace GitcgNetCord.MainApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -35,6 +35,49 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.HasIndex("HoyolabAccountId");
 
                     b.ToTable("ActiveHoyolabAccounts");
+                });
+
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.CardSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CardData")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiscordUserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<Guid>("HoyolabAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SnapshotType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalGames")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalWins")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscordUserId");
+
+                    b.HasIndex("HoyolabAccountId", "Name");
+
+                    b.ToTable("CardSnapshots");
                 });
 
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordCardCodeChannel", b =>
@@ -64,6 +107,37 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DiscordUsers");
+                });
+
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.GameVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("ReleaseDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VersionNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("GameVersions");
                 });
 
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.HoyolabAccount", b =>
@@ -121,6 +195,17 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Navigation("HoyolabAccount");
                 });
 
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.CardSnapshot", b =>
+                {
+                    b.HasOne("GitcgNetCord.MainApp.Entities.HoyolabAccount", "HoyolabAccount")
+                        .WithMany("CardSnapshots")
+                        .HasForeignKey("HoyolabAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HoyolabAccount");
+                });
+
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.HoyolabAccount", b =>
                 {
                     b.HasOne("GitcgNetCord.MainApp.Entities.DiscordUser", "DiscordUser")
@@ -137,6 +222,11 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Navigation("ActiveHoyolabAccount");
 
                     b.Navigation("HoyolabAccounts");
+                });
+
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.HoyolabAccount", b =>
+                {
+                    b.Navigation("CardSnapshots");
                 });
 #pragma warning restore 612, 618
         }
