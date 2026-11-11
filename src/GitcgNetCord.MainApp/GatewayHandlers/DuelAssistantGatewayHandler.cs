@@ -9,8 +9,7 @@ using NetCord.Rest;
 namespace GitcgNetCord.MainApp.GatewayHandlers;
 
 public class DuelAssistantGatewayHandler(
-    IServiceScopeFactory serviceScopeFactory,
-    GatewayClient client
+    IServiceScopeFactory serviceScopeFactory
 ) : IMessageCreateGatewayHandler
 {
     public async ValueTask HandleAsync(Message message)

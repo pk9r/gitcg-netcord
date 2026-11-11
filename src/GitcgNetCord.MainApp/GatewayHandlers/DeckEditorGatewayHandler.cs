@@ -12,8 +12,7 @@ namespace GitcgNetCord.MainApp.GatewayHandlers;
 
 public class DeckEditorGatewayHandler(
     IServiceScopeFactory serviceScopeFactory,
-    GitcgGatewayHandlerContext gitcgGatewayHandlerContext,
-    GatewayClient client
+    GitcgGatewayHandlerContext gitcgGatewayHandlerContext
 ) : IMessageCreateGatewayHandler
 {
     public async ValueTask HandleAsync(Message message)

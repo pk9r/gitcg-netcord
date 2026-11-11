@@ -4,5 +4,5 @@ namespace GitcgNetCord.MainApp.Models;
 
 public class GitcgGatewayHandlerContext
 {
-     public Message Message { get; set; }
+    public Message Message { get; set; } = null!;
 }
