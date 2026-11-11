@@ -5,70 +5,19 @@
     <projectFile aspireProfileName="https">src/AppHost/AppHost.csproj</projectFile>
     <projectFile profileName="http">src/AppHost/AppHost.csproj</projectFile>
     <projectFile profileName="https">src/AppHost/AppHost.csproj</projectFile>
-    <projectFile>src/Gitcg.NetCord.App/Gitcg.NetCord.App.csproj</projectFile>
-    <projectFile kind="Docker">src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj</projectFile>
-    <projectFile profileName="http">src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj</projectFile>
-    <projectFile profileName="https">src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj</projectFile>
-    <projectFile profileName="http">src/Gitcg.NetCord.MainApp/GitcgNetCord.MainApp.csproj</projectFile>
-    <projectFile profileName="https">src/Gitcg.NetCord.MainApp/GitcgNetCord.MainApp.csproj</projectFile>
+    <projectFile profileName="http">src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj</projectFile>
+    <projectFile profileName="https">src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj</projectFile>
   </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a355517-17b9-4fc7-85df-4f7de21a41ee" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/GitcgNetCord.slnx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Autocompletes/LanguageAutocompleteProvider.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Autocompletes/ServerAutocompleteProvider.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Autocompletes/SharingCodeAutocompleteProvider.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/AddHoyolabAccountComponentInteraction.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/CopySharingCodeComponentInteraction.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/SelectGameRecordComponentInteraction.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/UpdateActiveHoyolabAccountComponentInteraction.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/AddHoyolabAccountSlashCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/DeckSlashCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/HoyolabAccountsSlashCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/TcgSlashCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Configuration/CardCodeModuleOptions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/ActiveHoyolabAccountService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/DiscordUserService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/HoyolabAccountService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Enums/SharingCodeValidationRuleType.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Enums/SharingDecodeType.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GatewayHandlers/CardCodeGatewayHandler.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GatewayHandlers/ReplaysGatewayHandler.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/HoyolabServices/HoyolabCardRoleService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/HoyolabServices/HoyolabDeckAccountService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/HoyolabServices/HoyolabDecoder.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/HoyolabServices/HoyolabGcgBasicInfoService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Models/DecodeResult.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/CardCodeModule.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/HoyolabAccountModule.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/HoyolabGcgModule.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Gitcg.NetCord/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Gitcg.NetCord/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Gitcg.NetCord/.idea/indexLayout.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Gitcg.NetCord/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Gitcg.NetCord/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Directory.Packages.props" beforeDir="false" afterPath="$PROJECT_DIR$/Directory.Packages.props" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gitcg.NetCord.sln.DotSettings" beforeDir="false" afterPath="$PROJECT_DIR$/Gitcg.NetCord.sln.DotSettings" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gitcg.NetCord.slnx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AppHost/AppHost.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/AppHost/AppHost.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AppHost/AppHost.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/AppHost/AppHost.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Preconditions/RequireDevRoleAttribute.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Preconditions/RequireDevRoleAttribute.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/UpdateRoleEmojisSlashCommand.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/UpdateRoleEmojisSlashCommand.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Components/App.razor" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Components/App.razor" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Components/_Imports.razor" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Components/_Imports.razor" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/ActiveHoyolabAccount.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/ActiveHoyolabAccount.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/DiscordUser.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/DiscordUser.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/HoyolabAccount.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/HoyolabAccount.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Extensions/Extensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Extensions/Extensions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/AppDbContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/AppDbContext.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/RoleEmojisModule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/RoleEmojisModule.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/HoyolabHttpClient/Extensions/Extensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/HoyolabHttpClient/Extensions/Extensions.cs" afterDir="false" />
-    </list>
+    <list default="true" id="3a355517-17b9-4fc7-85df-4f7de21a41ee" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -91,27 +40,6 @@
 }</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/6ab3be37dec913ef7d649338adbdc7ba6ecf9e17ad69af5d293b71d60e4be5a/EmojiProperties.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Autocompletes/SharingCodeAutocompleteProvider.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/AddHoyolabAccountComponentInteraction.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/CopySharingCodeComponentInteraction.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/SelectGameRecordComponentInteraction.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Interactions/UpdateActiveHoyolabAccountComponentInteraction.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/AddHoyolabAccountSlashCommand.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/DeckSlashCommand.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/HoyolabAccountsSlashCommand.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Commands/Slash/TcgSlashCommand.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/ActiveHoyolabAccountService.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/DiscordUserService.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Entities/Repositories/HoyolabAccountService.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Extensions/Extensions.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GatewayHandlers/CardCodeGatewayHandler.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GatewayHandlers/ReplaysGatewayHandler.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/AppDbContext.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Infrastructure/HoyolabServices/HoyolabDecoder.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/CardCodeModule.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/HoyolabAccountModule.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Modules/Feats/HoyolabGcgModule.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Program.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
@@ -186,8 +114,8 @@
       </method>
     </configuration>
     <configuration name="GitcgNetCord.MainApp: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
-      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GitcgNetCord.MainApp.csproj" />
-      <option name="LAUNCH_PROFILE_TFM" value="net9.0" />
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value="net10.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
       <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
@@ -202,8 +130,8 @@
       </method>
     </configuration>
     <configuration name="GitcgNetCord.MainApp: https" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
-      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/GitcgNetCord.MainApp.csproj" />
-      <option name="LAUNCH_PROFILE_TFM" value="net9.0" />
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value="net10.0" />
       <option name="LAUNCH_PROFILE_NAME" value="https" />
       <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
@@ -217,44 +145,11 @@
         <option name="Build" />
       </method>
     </configuration>
-    <configuration name="Gitcg.NetCord.MainApp: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
-      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj" />
-      <option name="LAUNCH_PROFILE_TFM" value="net9.0" />
-      <option name="LAUNCH_PROFILE_NAME" value="http" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
-      <option name="USE_MONO" value="0" />
-      <option name="RUNTIME_ARGUMENTS" value="" />
-      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
-      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
-      <option name="SEND_DEBUG_REQUEST" value="1" />
-      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
-      <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <method v="2">
-        <option name="Build" />
-      </method>
-    </configuration>
-    <configuration name="Gitcg.NetCord.MainApp: https" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
-      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/Gitcg.NetCord.MainApp/Gitcg.NetCord.MainApp.csproj" />
-      <option name="LAUNCH_PROFILE_TFM" value="net9.0" />
-      <option name="LAUNCH_PROFILE_NAME" value="https" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
-      <option name="USE_MONO" value="0" />
-      <option name="RUNTIME_ARGUMENTS" value="" />
-      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
-      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
-      <option name="SEND_DEBUG_REQUEST" value="1" />
-      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
-      <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <method v="2">
-        <option name="Build" />
-      </method>
-    </configuration>
-    <configuration name="Gitcg.NetCord.MainApp/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <configuration name="GitcgNetCord.MainApp/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
       <deployment type="dockerfile">
         <settings>
           <option name="containerName" value="gitcg.netcord.mainapp" />
-          <option name="contextFolderPath" value="C:\Users\phucp\RiderProjects\gitcg-netcord" />
-          <option name="sourceFilePath" value="src/Gitcg.NetCord.MainApp/Dockerfile" />
+          <option name="sourceFilePath" value="src/GitcgNetCord.MainApp/Dockerfile" />
         </settings>
       </deployment>
       <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
