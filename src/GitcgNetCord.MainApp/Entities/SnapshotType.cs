@@ -4,5 +4,6 @@ public enum SnapshotType
 {
     GameVersion,
     Patch,
-    UserCustom
+    UserCustom,
+    Daily
 }

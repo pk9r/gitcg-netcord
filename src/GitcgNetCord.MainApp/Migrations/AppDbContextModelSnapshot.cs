@@ -17,7 +17,7 @@ namespace GitcgNetCord.MainApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.15")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -99,6 +99,67 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.ToTable("DiscordCardCodeChannels");
                 });
 
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordDailyReportChannel", b =>
+                {
+                    b.Property<decimal>("Id")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("DiscordDailyReportChannels");
+                });
+
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordDailyReportThread", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiscordUserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<Guid>("HoyolabAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("ThreadId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscordUserId");
+
+                    b.HasIndex("GuildId");
+
+                    b.HasIndex("HoyolabAccountId");
+
+                    b.HasIndex("ThreadId", "HoyolabAccountId")
+                        .IsUnique();
+
+                    b.ToTable("DiscordDailyReportThreads");
+                });
+
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordUser", b =>
                 {
                     b.Property<decimal>("Id")
@@ -159,6 +220,11 @@ namespace GitcgNetCord.MainApp.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<bool>("IsDailySnapshotEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Region")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -206,6 +272,17 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Navigation("HoyolabAccount");
                 });
 
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordDailyReportThread", b =>
+                {
+                    b.HasOne("GitcgNetCord.MainApp.Entities.HoyolabAccount", "HoyolabAccount")
+                        .WithMany("DailyReportThreads")
+                        .HasForeignKey("HoyolabAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HoyolabAccount");
+                });
+
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.HoyolabAccount", b =>
                 {
                     b.HasOne("GitcgNetCord.MainApp.Entities.DiscordUser", "DiscordUser")
@@ -227,6 +304,8 @@ namespace GitcgNetCord.MainApp.Migrations
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.HoyolabAccount", b =>
                 {
                     b.Navigation("CardSnapshots");
+
+                    b.Navigation("DailyReportThreads");
                 });
 #pragma warning restore 612, 618
         }

@@ -30,9 +30,65 @@ public static class CardSnapshotModule
         );
 
         group.AddSubCommand(
+            name: "daily",
+            description: "Enable or disable automatic daily snapshot capture.",
+            handler: CardSnapshotSlashCommand.DailyAsync
+        );
+
+        group.AddSubCommand(
             name: "delete",
             description: "Delete a custom snapshot.",
             handler: CardSnapshotSlashCommand.DeleteAsync
+        );
+
+        group.AddSubCommandGroup(
+            name: "channel",
+            description: "Manage approved parent channels for daily thread reporting (Admin).",
+            builder: channelGroup =>
+            {
+                channelGroup.AddSubCommand(
+                    name: "add",
+                    description: "Register an approved parent channel for daily thread reporting.",
+                    handler: CardSnapshotSlashCommand.ChannelAddAsync
+                );
+
+                channelGroup.AddSubCommand(
+                    name: "remove",
+                    description: "Unregister an approved parent channel from daily thread reporting.",
+                    handler: CardSnapshotSlashCommand.ChannelRemoveAsync
+                );
+
+                channelGroup.AddSubCommand(
+                    name: "list",
+                    description: "List approved parent channels registered for daily thread reporting.",
+                    handler: CardSnapshotSlashCommand.ChannelListAsync
+                );
+            }
+        );
+
+        group.AddSubCommandGroup(
+            name: "thread",
+            description: "Configure daily statistics report delivery in this thread.",
+            builder: threadGroup =>
+            {
+                threadGroup.AddSubCommand(
+                    name: "subscribe",
+                    description: "Subscribe a Hoyolab account to daily statistics reports in this thread.",
+                    handler: CardSnapshotSlashCommand.ThreadSubscribeAsync
+                );
+
+                threadGroup.AddSubCommand(
+                    name: "unsubscribe",
+                    description: "Unsubscribe a Hoyolab account from daily statistics reports in this thread.",
+                    handler: CardSnapshotSlashCommand.ThreadUnsubscribeAsync
+                );
+
+                threadGroup.AddSubCommand(
+                    name: "list",
+                    description: "List Hoyolab accounts currently subscribed to daily reports in this thread.",
+                    handler: CardSnapshotSlashCommand.ThreadListAsync
+                );
+            }
         );
     }
 }
