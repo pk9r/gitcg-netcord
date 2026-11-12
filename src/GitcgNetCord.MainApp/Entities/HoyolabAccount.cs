@@ -13,4 +13,5 @@ public class HoyolabAccount
 
     public DiscordUser DiscordUser { get; set; } = null!;
     public ICollection<CardSnapshot> CardSnapshots { get; set; } = [];
+    public ICollection<DiscordDailyReportThread> DailyReportThreads { get; set; } = [];
 }

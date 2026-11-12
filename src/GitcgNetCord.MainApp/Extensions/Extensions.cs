@@ -90,11 +90,14 @@ public static class Extensions
         
         services.AddScoped<ActiveHoyolabAccountService>();
         services.AddScoped<DiscordCardCodeChannelService>();
+        services.AddScoped<DiscordDailyReportService>();
+        services.AddScoped<DailyReportDeliveryService>();
         services.AddScoped<DiscordUserService>();
         services.AddScoped<HoyolabAccountService>();
         services.AddScoped<CardSnapshotService>();
         services.AddScoped<GameVersionService>();
         services.AddScoped<CardSnapshotAutocompleteProvider>();
+        services.AddScoped<HoyolabAccountAutocompleteProvider>();
         services.AddSingleton<ICardStatsCalculator, CardStatsCalculator>();
         services.AddHostedService<VersionSnapshotWorker>();
         services.AddHostedService<DailySnapshotWorker>();

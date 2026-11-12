@@ -104,7 +104,7 @@ public class DailySnapshotWorker(
                 var totalGames = characters.Sum(x => x.UseCount) / 3;
                 var totalWins = characters.Sum(x => x.Proficiency) / 3;
 
-                await cardSnapshotService.SaveSnapshotAsync(
+                var snapshot = await cardSnapshotService.SaveSnapshotAsync(
                     hoyolabAccountId: account.Id,
                     discordUserId: activeAccount.DiscordUserId,
                     name: snapshotName,
@@ -120,6 +120,16 @@ public class DailySnapshotWorker(
                     snapshotName,
                     account.Id,
                     account.GameRoleId
+                );
+
+                // Deliver daily reports to subscribed threads
+                var deliveryService = scope.ServiceProvider.GetRequiredService<DailyReportDeliveryService>();
+                await deliveryService.DeliverReportsAsync(
+                    account: account,
+                    allCardsMetadata: data.CardList,
+                    currentSnapshot: snapshot,
+                    localGameDate: localGameDate,
+                    cancellationToken: cancellationToken
                 );
             }
             catch (Exception ex)

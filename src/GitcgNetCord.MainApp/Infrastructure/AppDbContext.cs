@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<DiscordCardCodeChannel> DiscordCardCodeChannels { get; set; } = null!;
     public DbSet<CardSnapshot> CardSnapshots { get; set; } = null!;
     public DbSet<GameVersion> GameVersions { get; set; } = null!;
+    public DbSet<DiscordDailyReportChannel> DiscordDailyReportChannels { get; set; } = null!;
+    public DbSet<DiscordDailyReportThread> DiscordDailyReportThreads { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -88,6 +90,26 @@ public class AppDbContext : DbContext
 
             config.HasOne(x => x.HoyolabAccount)
                 .WithMany(x => x.CardSnapshots)
+                .HasForeignKey(x => x.HoyolabAccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<DiscordDailyReportChannel>(config =>
+        {
+            config.Property(x => x.Id)
+                .ValueGeneratedNever();
+            config.HasIndex(x => x.GuildId);
+        });
+
+        builder.Entity<DiscordDailyReportThread>(config =>
+        {
+            config.HasIndex(x => new { x.ThreadId, x.HoyolabAccountId }).IsUnique();
+            config.HasIndex(x => x.GuildId);
+            config.HasIndex(x => x.DiscordUserId);
+            config.HasIndex(x => x.HoyolabAccountId);
+
+            config.HasOne(x => x.HoyolabAccount)
+                .WithMany(x => x.DailyReportThreads)
                 .HasForeignKey(x => x.HoyolabAccountId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
