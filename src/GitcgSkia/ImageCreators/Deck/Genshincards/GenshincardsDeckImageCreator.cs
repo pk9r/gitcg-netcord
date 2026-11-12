@@ -396,7 +396,7 @@ public class GenshincardsDeckImageCreator(
 
             canvas.DrawText(
                 text: $"{actionCard.SkillValue}",
-                p: skillValuePosition - new SKSizeI(11, 24),
+                p: skillValuePosition + new SKSizeI(-11, 24),
                 textAlign: SKTextAlign.Left,
                 font: skillValueFont,
                 paint: skillValueFontPaint
