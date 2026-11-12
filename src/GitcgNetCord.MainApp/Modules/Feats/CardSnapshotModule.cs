@@ -30,6 +30,12 @@ public static class CardSnapshotModule
         );
 
         group.AddSubCommand(
+            name: "daily",
+            description: "Bật hoặc tắt tự động chụp Daily Snapshot theo ngày.",
+            handler: CardSnapshotSlashCommand.DailyAsync
+        );
+
+        group.AddSubCommand(
             name: "delete",
             description: "Delete a custom snapshot.",
             handler: CardSnapshotSlashCommand.DeleteAsync

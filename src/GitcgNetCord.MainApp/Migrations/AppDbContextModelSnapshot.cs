@@ -159,6 +159,11 @@ namespace GitcgNetCord.MainApp.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<bool>("IsDailySnapshotEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Region")
                         .IsRequired()
                         .HasMaxLength(10)

@@ -4,6 +4,7 @@ using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Extensions;
+using GitcgNetCord.MainApp.Infrastructure;
 using HoyolabHttpClient;
 using NetCord;
 using NetCord.Rest;
@@ -119,6 +120,55 @@ public static class CardSnapshotSlashCommand
         });
     }
 
+    public static async Task DailyAsync(
+        ActiveHoyolabAccountService activeHoyolabAccountService,
+        AppDbContext dbContext,
+        ApplicationCommandContext context,
+        [SlashCommandParameter(Description = "Bật (true) hoặc tắt (false) tự động chụp Daily Snapshot")]
+        bool enabled
+    )
+    {
+        await context.Interaction.SendResponseAsync(
+            InteractionCallback.DeferredMessage(MessageFlags.Ephemeral)
+        );
+
+        var hoyolabAccount = await activeHoyolabAccountService
+            .GetActiveHoyolabAccountAsync(context.User.Id);
+
+        if (hoyolabAccount == null)
+        {
+            await context.Interaction.ModifyResponseAsync(msg =>
+            {
+                msg.AddEmbeds(new EmbedProperties()
+                    .WithTitle("Lỗi")
+                    .WithDescription("Bạn chưa thiết lập tài khoản Hoyolab hoạt động. Vui lòng dùng lệnh `/hoyolab-accounts` để thêm.")
+                    .WithColor(System.Drawing.Color.Red.ToNetCordColor())
+                );
+            });
+            return;
+        }
+
+        hoyolabAccount.IsDailySnapshotEnabled = enabled;
+        await dbContext.SaveChangesAsync();
+
+        var statusText = enabled
+            ? "Đã **bật** tự động chụp Daily Snapshot mỗi ngày lúc 04:00 AM (giờ server game)."
+            : "Đã **tắt** tự động chụp Daily Snapshot.";
+
+        await context.Interaction.ModifyResponseAsync(msg =>
+        {
+            msg.AddEmbeds(new EmbedProperties()
+                .WithTitle("Cấu hình Daily Snapshot")
+                .WithDescription(statusText)
+                .WithColor(enabled ? System.Drawing.Color.Green.ToNetCordColor() : System.Drawing.Color.Gray.ToNetCordColor())
+                .AddFields(
+                    new EmbedFieldProperties().WithName("UID").WithValue(hoyolabAccount.GameRoleId).WithInline(),
+                    new EmbedFieldProperties().WithName("Server").WithValue(hoyolabAccount.Region).WithInline()
+                )
+            );
+        });
+    }
+
     public static async Task ListAsync(
         ActiveHoyolabAccountService activeHoyolabAccountService,
         CardSnapshotService cardSnapshotService,
@@ -147,7 +197,12 @@ public static class CardSnapshotSlashCommand
 
         var snapshots = await cardSnapshotService.GetSnapshotsForAccountAsync(hoyolabAccount.Id);
 
-        if (snapshots.Count == 0)
+        var displaySnapshots = snapshots
+            .Where(x => x.SnapshotType != SnapshotType.Daily)
+            .ToList();
+        var dailyCount = snapshots.Count(x => x.SnapshotType == SnapshotType.Daily);
+
+        if (displaySnapshots.Count == 0 && dailyCount == 0)
         {
             await context.Interaction.ModifyResponseAsync(msg =>
             {
@@ -161,11 +216,22 @@ public static class CardSnapshotSlashCommand
         }
 
         var sb = new StringBuilder();
-        foreach (var s in snapshots.Take(25))
+        if (displaySnapshots.Count == 0)
         {
-            var typeTag = s.SnapshotType == SnapshotType.GameVersion ? "[Version]" : "[Custom]";
-            sb.AppendLine($"• **{typeTag} {s.Name}** ({s.CreatedAt:dd/MM/yyyy HH:mm}) - {s.TotalGames} trận ({s.TotalWins} thắng)");
+            sb.AppendLine("Bạn chưa có bản lưu Version hay Custom nào.");
         }
+        else
+        {
+            foreach (var s in displaySnapshots.Take(25))
+            {
+                var typeTag = s.SnapshotType == SnapshotType.GameVersion ? "[Version]" : "[Custom]";
+                sb.AppendLine($"• **{typeTag} {s.Name}** ({s.CreatedAt:dd/MM/yyyy HH:mm}) - {s.TotalGames} trận ({s.TotalWins} thắng)");
+            }
+        }
+
+        var footerText = dailyCount > 0
+            ? $"Tổng cộng: {displaySnapshots.Count} bản lưu (+ {dailyCount} daily snapshots)"
+            : $"Tổng cộng: {displaySnapshots.Count} bản lưu";
 
         await context.Interaction.ModifyResponseAsync(msg =>
         {
@@ -173,7 +239,7 @@ public static class CardSnapshotSlashCommand
                 .WithTitle("Danh sách Snapshot của bạn")
                 .WithDescription(sb.ToString())
                 .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
-                .WithFooter(new EmbedFooterProperties().WithText($"Tổng cộng: {snapshots.Count} bản lưu"))
+                .WithFooter(new EmbedFooterProperties().WithText(footerText))
             );
         });
     }
@@ -210,6 +276,35 @@ public static class CardSnapshotSlashCommand
         }
 
         var cleanName = name.Trim();
+        var snapshot = await cardSnapshotService.GetSnapshotByNameAsync(hoyolabAccount.Id, cleanName);
+
+        if (snapshot == null)
+        {
+            await context.Interaction.ModifyResponseAsync(msg =>
+            {
+                msg.AddEmbeds(new EmbedProperties()
+                    .WithTitle("Lỗi")
+                    .WithDescription($"Không tìm thấy bản lưu nào mang tên '{cleanName}'.")
+                    .WithColor(System.Drawing.Color.Red.ToNetCordColor())
+                );
+            });
+            return;
+        }
+
+        if (snapshot.SnapshotType != SnapshotType.UserCustom)
+        {
+            var typeLabel = snapshot.SnapshotType == SnapshotType.Daily ? "Daily Snapshot" : "Game Version";
+            await context.Interaction.ModifyResponseAsync(msg =>
+            {
+                msg.AddEmbeds(new EmbedProperties()
+                    .WithTitle("Lỗi")
+                    .WithDescription($"Chỉ có thể xóa các bản lưu tùy chỉnh (Custom). Bạn không thể xóa bản lưu hệ thống ({typeLabel}).")
+                    .WithColor(System.Drawing.Color.Red.ToNetCordColor())
+                );
+            });
+            return;
+        }
+
         var deleted = await cardSnapshotService.DeleteSnapshotAsync(hoyolabAccount.Id, cleanName);
 
         if (!deleted)
@@ -218,7 +313,7 @@ public static class CardSnapshotSlashCommand
             {
                 msg.AddEmbeds(new EmbedProperties()
                     .WithTitle("Lỗi")
-                    .WithDescription($"Không tìm thấy bản lưu nào mang tên '{cleanName}'.")
+                    .WithDescription($"Không thể xóa bản lưu '{cleanName}'.")
                     .WithColor(System.Drawing.Color.Red.ToNetCordColor())
                 );
             });

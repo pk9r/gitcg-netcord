@@ -97,6 +97,7 @@ public static class Extensions
         services.AddScoped<CardSnapshotAutocompleteProvider>();
         services.AddSingleton<ICardStatsCalculator, CardStatsCalculator>();
         services.AddHostedService<VersionSnapshotWorker>();
+        services.AddHostedService<DailySnapshotWorker>();
 
         services.AddScoped<DeckEditorPlugin>();
 

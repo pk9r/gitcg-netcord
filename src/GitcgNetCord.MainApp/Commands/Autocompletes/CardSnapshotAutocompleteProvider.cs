@@ -33,15 +33,18 @@ public class CardSnapshotAutocompleteProvider(
             }
         }
 
-        var versions = await gameVersionService.GetGameVersionsAsync();
-        foreach (var v in versions)
+        if (paramName != "name")
         {
-            var label = $"Version {v.VersionNumber}" + (!string.IsNullOrWhiteSpace(v.Name) ? $" - {v.Name}" : "");
-            if (string.IsNullOrWhiteSpace(keyword) ||
-                label.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                v.VersionNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            var versions = await gameVersionService.GetGameVersionsAsync();
+            foreach (var v in versions)
             {
-                results.Add(new ApplicationCommandOptionChoiceProperties(label, v.VersionNumber));
+                var label = $"Version {v.VersionNumber}" + (!string.IsNullOrWhiteSpace(v.Name) ? $" - {v.Name}" : "");
+                if (string.IsNullOrWhiteSpace(keyword) ||
+                    label.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                    v.VersionNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    results.Add(new ApplicationCommandOptionChoiceProperties(label, v.VersionNumber));
+                }
             }
         }
 
@@ -51,14 +54,38 @@ public class CardSnapshotAutocompleteProvider(
             if (activeAccount != null)
             {
                 var snapshots = await cardSnapshotService.GetSnapshotsForAccountAsync(activeAccount.Id);
-                foreach (var s in snapshots.Where(x => x.SnapshotType != SnapshotType.GameVersion))
+                var isDailyQuery = !string.IsNullOrWhiteSpace(keyword) &&
+                    (keyword.Contains("daily", StringComparison.OrdinalIgnoreCase) ||
+                     char.IsDigit(keyword[0]));
+
+                foreach (var s in snapshots)
                 {
-                    var label = $"[Custom] {s.Name} ({s.CreatedAt:yyyy-MM-dd})";
-                    if (string.IsNullOrWhiteSpace(keyword) ||
-                        label.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                        s.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                    if (s.SnapshotType == SnapshotType.GameVersion) continue;
+
+                    if (s.SnapshotType == SnapshotType.Daily)
                     {
-                        results.Add(new ApplicationCommandOptionChoiceProperties(label, s.Name));
+                        // In delete command (paramName == "name"), daily snapshots cannot be deleted
+                        if (paramName == "name") continue;
+
+                        // In card query (paramName == "from" / "to"), only include if explicitly queried
+                        if (!isDailyQuery) continue;
+
+                        var label = $"[Daily] {s.Name} ({s.CreatedAt:yyyy-MM-dd})";
+                        if (label.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            s.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                        {
+                            results.Add(new ApplicationCommandOptionChoiceProperties(label, s.Name));
+                        }
+                    }
+                    else
+                    {
+                        var label = $"[Custom] {s.Name} ({s.CreatedAt:yyyy-MM-dd})";
+                        if (string.IsNullOrWhiteSpace(keyword) ||
+                            label.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            s.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                        {
+                            results.Add(new ApplicationCommandOptionChoiceProperties(label, s.Name));
+                        }
                     }
                 }
             }

@@ -9,6 +9,7 @@ public class HoyolabAccount
     public string Token { get; set; } = string.Empty;
     public string GameRoleId { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;
+    public bool IsDailySnapshotEnabled { get; set; } = false;
 
     public DiscordUser DiscordUser { get; set; } = null!;
     public ICollection<CardSnapshot> CardSnapshots { get; set; } = [];
