@@ -155,5 +155,36 @@ public class CardStatsCalculatorTests
         Assert.Equal(0f, result.OverallWinRate);
         Assert.Empty(result.TopUseCharacters);
         Assert.Empty(result.BestWinRateCharacters);
+        Assert.Empty(result.UsedCharacters);
+    }
+
+    [Fact]
+    public void Calculate_PopulatesAllUsedCharactersSortedByUseCountThenWinRate()
+    {
+        var cards = new List<Card>
+        {
+            CreateCard(1, "Char 1", "CardTypeCharacter", 10, 8),   // 10 games, 80% WR
+            CreateCard(2, "Char 2", "CardTypeCharacter", 15, 10),  // 15 games, 66.7% WR
+            CreateCard(3, "Char 3", "CardTypeCharacter", 10, 9),   // 10 games, 90% WR
+            CreateCard(4, "Char 4", "CardTypeCharacter", 5, 5),    // 5 games, 100% WR
+            CreateCard(5, "Char 5", "CardTypeCharacter", 0, 0),    // 0 games - should not appear
+        };
+
+        var result = _calculator.Calculate(cards, startSnapshot: null, endSnapshot: null, topUseCount: 2);
+
+        // TopUseCharacters should be clamped to topUseCount (2)
+        Assert.Equal(2, result.TopUseCharacters.Count);
+        Assert.Equal(2, result.TopUseCharacters[0].Id); // 15 games
+
+        // UsedCharacters should contain all 4 characters with UseCount > 0
+        Assert.Equal(4, result.UsedCharacters.Count);
+        // Ordering: 1st: Char 2 (15 games)
+        Assert.Equal(2, result.UsedCharacters[0].Id);
+        // 2nd: Char 3 (10 games, 90% WR beats Char 1's 80% WR)
+        Assert.Equal(3, result.UsedCharacters[1].Id);
+        // 3rd: Char 1 (10 games, 80% WR)
+        Assert.Equal(1, result.UsedCharacters[2].Id);
+        // 4th: Char 4 (5 games)
+        Assert.Equal(4, result.UsedCharacters[3].Id);
     }
 }

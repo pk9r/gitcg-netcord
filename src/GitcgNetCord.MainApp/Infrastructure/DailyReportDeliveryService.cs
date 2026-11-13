@@ -208,43 +208,46 @@ public class DailyReportDeliveryService(
             new EmbedFieldProperties().WithName("Losses").WithValue($"{result.TotalGames - result.TotalWins}").WithInline()
         );
 
-        if (result.TopUseCharacters.Count > 0)
+        var charactersToDisplay = result.UsedCharacters.Count > 0 ? result.UsedCharacters : result.TopUseCharacters;
+        if (charactersToDisplay.Count > 0)
         {
+            const int maxFieldLength = 1024;
+            var currentFieldName = "Characters Used";
             var sb = new StringBuilder();
-            for (var i = 0; i < Math.Min(5, result.TopUseCharacters.Count); i++)
-            {
-                var card = result.TopUseCharacters[i];
-                var emojiPrefix = emojis != null && emojis.TryGetValue(card.Id.ToString(), out var emoji)
-                    ? $"{emoji} "
-                    : string.Empty;
-                sb.AppendLine($"{i + 1}. {emojiPrefix}**{card.Name}** - {card.UseCount} games");
-            }
-            embed.AddFields(new EmbedFieldProperties().WithName("Most Used Characters").WithValue(sb.ToString()).WithInline());
-        }
 
-        if (result.BestWinRateCharacters.Count > 0)
-        {
-            var sb = new StringBuilder();
-            for (var i = 0; i < Math.Min(5, result.BestWinRateCharacters.Count); i++)
+            for (var i = 0; i < charactersToDisplay.Count; i++)
             {
-                var card = result.BestWinRateCharacters[i];
+                var card = charactersToDisplay[i];
                 var emojiPrefix = emojis != null && emojis.TryGetValue(card.Id.ToString(), out var emoji)
                     ? $"{emoji} "
                     : string.Empty;
-                sb.AppendLine($"{i + 1}. {emojiPrefix}**{card.Name}** - {card.WinRate:P1} ({card.Proficiency}/{card.UseCount})");
+                var line = $"{i + 1}. {emojiPrefix}**{card.Name}** - {card.UseCount} games ({card.WinRate:P1} - {card.Proficiency}W/{card.UseCount - card.Proficiency}L)\n";
+
+                if (sb.Length + line.Length > maxFieldLength && sb.Length > 0)
+                {
+                    embed.AddFields(new EmbedFieldProperties().WithName(currentFieldName).WithValue(sb.ToString().TrimEnd()));
+                    sb.Clear();
+                    currentFieldName = "Characters Used (Cont.)";
+                }
+
+                sb.Append(line);
             }
-            embed.AddFields(new EmbedFieldProperties().WithName("Highest Win Rate Characters").WithValue(sb.ToString()).WithInline());
+
+            if (sb.Length > 0)
+            {
+                embed.AddFields(new EmbedFieldProperties().WithName(currentFieldName).WithValue(sb.ToString().TrimEnd()));
+            }
         }
 
         if (result.TopUseActions.Count > 0)
         {
             var sb = new StringBuilder();
-            for (var i = 0; i < Math.Min(5, result.TopUseActions.Count); i++)
+            for (var i = 0; i < Math.Min(10, result.TopUseActions.Count); i++)
             {
                 var card = result.TopUseActions[i];
                 sb.AppendLine($"{i + 1}. **{card.Name}** - {card.UseCount} times");
             }
-            embed.AddFields(new EmbedFieldProperties().WithName("Most Used Actions").WithValue(sb.ToString()));
+            embed.AddFields(new EmbedFieldProperties().WithName("Top Actions").WithValue(sb.ToString().TrimEnd()));
         }
 
         embed.WithFooter(new EmbedFooterProperties().WithText($"Total to date: {currentSnapshot.TotalGames} games ({currentSnapshot.TotalWins} wins)"));

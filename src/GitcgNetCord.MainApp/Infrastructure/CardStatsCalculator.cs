@@ -111,9 +111,13 @@ public class CardStatsCalculator : ICardStatsCalculator
             .Take(topWinRateCount)
             .ToList();
 
-        var topUseCharacters = characters
+        var usedCharacters = characters
             .Where(x => x.UseCount > 0)
             .OrderByDescending(x => x.UseCount)
+            .ThenByDescending(x => x.WinRate)
+            .ToList();
+
+        var topUseCharacters = usedCharacters
             .Take(topUseCount)
             .ToList();
 
@@ -133,7 +137,8 @@ public class CardStatsCalculator : ICardStatsCalculator
             BestWinRateCharacters: bestWinRate,
             LowestWinRateCharacters: lowestWinRate,
             TopUseCharacters: topUseCharacters,
-            TopUseActions: topUseActions
+            TopUseActions: topUseActions,
+            UsedCharacters: usedCharacters
         );
     }
 }

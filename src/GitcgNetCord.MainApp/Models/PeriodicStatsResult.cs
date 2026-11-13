@@ -19,5 +19,9 @@ public record PeriodicStatsResult(
     IReadOnlyList<CardDeltaStat> BestWinRateCharacters,
     IReadOnlyList<CardDeltaStat> LowestWinRateCharacters,
     IReadOnlyList<CardDeltaStat> TopUseCharacters,
-    IReadOnlyList<CardDeltaStat> TopUseActions
-);
+    IReadOnlyList<CardDeltaStat> TopUseActions,
+    IReadOnlyList<CardDeltaStat>? UsedCharacters = null
+)
+{
+    public IReadOnlyList<CardDeltaStat> UsedCharacters { get; init; } = UsedCharacters ?? [];
+}
