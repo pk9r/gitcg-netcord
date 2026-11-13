@@ -1,32 +1,40 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Project: gitcg-netcord (Discord Bot for Genshin Impact Genius Invokation TCG).
+  Stack: .NET 10, C# 13, .NET Aspire 13.6, NetCord (1.0.0-beta.29), SkiaSharp, EF Core (PostgreSQL), Redis.
+  User Interface Language: ALL user-facing Discord elements (commands, parameter descriptions, embed titles/fields/footers, notices, error messages) MUST be written in English.
+  Graphics Safety: Strictly ensure all SkiaSharp native objects (SKBitmap, SKCanvas, SKImage, SKPaint) are properly disposed.
+  Git Conventions: Use Conventional Commits (feat, fix, refactor, docs) adhering to project history.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - "Assess SemVer impact (MAJOR/MINOR/PATCH) and state breaking changes explicitly"
+    - "Always define explicit In-Scope and Out-of-Scope boundaries"
+    - "Identify any new infrastructure requirements (databases, caches, Aspire AppHost resources)"
+  specs:
+    - "Requirements must use RFC 2119 keywords (SHALL, MUST, SHOULD)"
+    - "Every requirement MUST include testable scenarios using GIVEN/WHEN/THEN format"
+    - "Scenarios must explicitly verify permission restrictions (ManageChannels, Guild-only, Thread owner) and edge cases"
+    - "Reiterate that all user-facing responses in scenarios must be rendered in English"
+  design:
+    - "Use Context7 MCP to verify current library APIs (NetCord, Aspire, SkiaSharp, SemanticKernel) before proposing code structures"
+    - "Separate architectural layers: Domain models, Service/Rendering logic, and NetCord command modules"
+    - "When adding dependencies or services, define their integration within the Aspire AppHost and ServiceDefaults"
+    - "Detail SkiaSharp canvas allocation and image stream lifetimes to prevent native memory leaks"
+  tasks:
+    - "Order implementation: Models/Migrations -> Aspire AppHost Wiring -> Core/Skia Logic -> NetCord Handlers/Endpoints -> Unit Tests"
+    - "Keep tasks small, testable, and independently verifiable"
+    - "Always include an explicit task for running and passing `dotnet test`"
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - "Consult Context7 MCP if encountering unexpected library behavior or unfamiliar API signatures"
+      - "Utilize Aspire skills / CLI to inspect AppHost health, logs, and telemetry when verifying integration changes"
+      - "Always run `dotnet test` and ensure all tests pass before completing tasks"
+      - "Check for proper IDisposable usage on all SkiaSharp resources"
+  archive:
+    guidance:
+      - "Verify all delta specs synced cleanly into openspec/specs/"
+      - "Ensure no lingering temporary build logs (e.g., msbuild.binlog) or uncommitted scratch files remain"
