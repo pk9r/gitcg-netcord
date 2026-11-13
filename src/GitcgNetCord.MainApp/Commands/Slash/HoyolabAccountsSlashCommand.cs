@@ -85,11 +85,11 @@ public static class HoyolabAccountsSlashCommand
                             customId: UpdateActiveHoyolabAccountComponentInteraction.CustomId,
                             label: "Update active account",
                             style: ButtonStyle.Secondary
-                        )
-                        // new ButtonProperties(
-                        //     customId: "remove-hoyolab-account",
-                        //     label: "Remove account",
-                        //     style: ButtonStyle.Danger)
+                        ),
+                        new ButtonProperties(
+                            customId: RemoveHoyolabAccountComponentInteraction.CustomId,
+                            label: "Remove account",
+                            style: ButtonStyle.Danger)
                     }
                 );
         });

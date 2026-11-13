@@ -225,6 +225,11 @@ namespace GitcgNetCord.MainApp.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Region")
                         .IsRequired()
                         .HasMaxLength(10)

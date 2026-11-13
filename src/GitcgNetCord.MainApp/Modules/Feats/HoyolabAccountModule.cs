@@ -25,6 +25,12 @@ public static class HoyolabAccountModule
             handler: HoyolabAccountsSlashCommand.ExecuteAsync
         );
 
+        host.AddSlashCommand(
+            name: "remove-hoyolab-account",
+            description: "Remove a linked Hoyolab account.",
+            handler: RemoveHoyolabAccountSlashCommand.ExecuteAsync
+        );
+
         host.AddComponentInteraction<ButtonInteractionContext>(
             customId: AddHoyolabAccountComponentInteraction.CustomId,
             handler: AddHoyolabAccountComponentInteraction.ExecuteAsync
@@ -35,9 +41,24 @@ public static class HoyolabAccountModule
             handler: UpdateActiveHoyolabAccountComponentInteraction.ExecuteAsync
         );
 
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: RemoveHoyolabAccountComponentInteraction.CustomId,
+            handler: RemoveHoyolabAccountComponentInteraction.ExecuteAsync
+        );
+
         host.AddComponentInteraction<StringMenuInteractionContext>(
             customId: SelectGameRecordComponentInteraction.CustomId,
             handler: SelectGameRecordComponentInteraction.ExecuteAsync
+        );
+
+        host.AddComponentInteraction<StringMenuInteractionContext>(
+            customId: RemoveHoyolabAccountComponentInteraction.SelectMenuCustomId,
+            handler: RemoveHoyolabAccountComponentInteraction.SelectAsync
+        );
+
+        host.AddComponentInteraction<StringMenuInteractionContext>(
+            customId: RemoveHoyolabAccountComponentInteraction.FallbackActiveSelectCustomId,
+            handler: RemoveHoyolabAccountComponentInteraction.SelectFallbackActiveAsync
         );
 
         host.AddComponentInteraction<ModalInteractionContext>(

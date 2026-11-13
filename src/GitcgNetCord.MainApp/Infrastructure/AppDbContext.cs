@@ -39,6 +39,8 @@ public class AppDbContext : DbContext
             config.Property(x => x.GameRoleId).HasMaxLength(10);
             config.Property(x => x.Region).HasMaxLength(10);
             config.Property(x => x.IsDailySnapshotEnabled).HasDefaultValue(false);
+            config.Property(x => x.IsDeleted).HasDefaultValue(false);
+            config.HasQueryFilter(x => !x.IsDeleted);
         });
 
         builder.Entity<ActiveHoyolabAccount>(config =>
