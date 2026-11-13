@@ -92,6 +92,7 @@ public static class Extensions
         services.AddScoped<DiscordCardCodeChannelService>();
         services.AddScoped<DiscordDailyReportService>();
         services.AddScoped<DailyReportDeliveryService>();
+        services.AddScoped<DailySnapshotProcessor>();
         services.AddScoped<DiscordUserService>();
         services.AddScoped<HoyolabAccountService>();
         services.AddScoped<CardSnapshotService>();

@@ -19,7 +19,7 @@ public class DailyReportDeliveryService(
     ILogger<DailyReportDeliveryService> logger
 )
 {
-    public async Task DeliverReportsAsync(
+    public async Task<int> DeliverReportsAsync(
         HoyolabAccount account,
         IReadOnlyCollection<Card> allCardsMetadata,
         CardSnapshot currentSnapshot,
@@ -28,7 +28,7 @@ public class DailyReportDeliveryService(
     )
     {
         var subscriptions = await reportService.GetActiveSubscriptionsForAccountAsync(account.Id, cancellationToken);
-        if (subscriptions.Count == 0) return;
+        if (subscriptions.Count == 0) return 0;
 
         var previousSnapshot = await dbContext.CardSnapshots
             .Where(x => x.HoyolabAccountId == account.Id && x.Id != currentSnapshot.Id && x.CreatedAt < currentSnapshot.CreatedAt)
@@ -47,6 +47,7 @@ public class DailyReportDeliveryService(
         var embed = BuildDailyReportEmbed(account, currentSnapshot, previousSnapshot, result, localGameDate);
         var messageProperties = new MessageProperties().AddEmbeds(embed);
 
+        var deliveredCount = 0;
         foreach (var subscription in subscriptions)
         {
             if (cancellationToken.IsCancellationRequested) break;
@@ -59,6 +60,7 @@ public class DailyReportDeliveryService(
                     cancellationToken: cancellationToken
                 );
 
+                deliveredCount++;
                 logger.LogInformation(
                     "Delivered daily report for account {AccountId} (UID: {UID}) to thread {ThreadId}.",
                     account.Id,
@@ -89,6 +91,8 @@ public class DailyReportDeliveryService(
 
             await Task.Delay(500, cancellationToken);
         }
+
+        return deliveredCount;
     }
 
     public static EmbedProperties BuildDailyReportEmbed(
