@@ -1,4 +1,5 @@
 ﻿using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
@@ -38,25 +39,23 @@ public static class UpdateActiveHoyolabAccountComponentInteraction
         ModalInteractionContext context
     )
     {
+        var uid = context.GetTextInputValue("uid")?.Trim();
+
+        if (string.IsNullOrWhiteSpace(uid))
+        {
+            await context.Interaction.SendResponseAsync(
+                InteractionCallback.Message(new InteractionMessageProperties
+                {
+                    Content = "Please provide a valid Genshin Impact UID.",
+                    Flags = MessageFlags.Ephemeral
+                })
+            );
+            return;
+        }
+
         await context.Interaction.SendResponseAsync(
             InteractionCallback.DeferredMessage(flags: MessageFlags.Ephemeral)
         );
-
-        var uid = "";
-
-        var textInputs = context.Components.OfType<TextInput>();
-
-        foreach (var textInput in textInputs)
-        {
-            switch (textInput.CustomId)
-            {
-                case "uid":
-                    uid = textInput.Value;
-                    break;
-                default:
-                    continue;
-            }
-        }
 
         try
         {

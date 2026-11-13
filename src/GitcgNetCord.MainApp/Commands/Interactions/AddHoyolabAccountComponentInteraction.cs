@@ -1,4 +1,5 @@
 ﻿using GitcgNetCord.MainApp.Commands.Slash;
+using GitcgNetCord.MainApp.Extensions;
 using HoyolabHttpClient;
 using Microsoft.Extensions.Caching.Hybrid;
 using NetCord;
@@ -54,23 +55,19 @@ public static class AddHoyolabAccountComponentInteraction
         ModalInteractionContext context
     )
     {
-        string hoyolabUserId = "", token = "";
+        var hoyolabUserId = context.GetTextInputValue("hoyolab-user-id")?.Trim();
+        var token = context.GetTextInputValue("token")?.Trim();
 
-        var textInputs = context.Components.OfType<TextInput>();
-
-        foreach (var textInput in textInputs)
+        if (string.IsNullOrWhiteSpace(hoyolabUserId) || string.IsNullOrWhiteSpace(token))
         {
-            switch (textInput.CustomId)
-            {
-                case "hoyolab-user-id":
-                    hoyolabUserId = textInput.Value;
-                    break;
-                case "token":
-                    token = textInput.Value;
-                    break;
-                default:
-                    continue;
-            }
+            await context.Interaction.SendResponseAsync(
+                InteractionCallback.Message(new InteractionMessageProperties
+                {
+                    Content = "Please provide both Hoyolab user ID and token.",
+                    Flags = MessageFlags.Ephemeral
+                })
+            );
+            return;
         }
 
         await AddHoyolabAccountSlashCommand.ExecuteCoreAsync(
