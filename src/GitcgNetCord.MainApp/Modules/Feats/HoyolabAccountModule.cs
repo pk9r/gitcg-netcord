@@ -46,6 +46,16 @@ public static class HoyolabAccountModule
             handler: RemoveHoyolabAccountComponentInteraction.ExecuteAsync
         );
 
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: RemoveHoyolabAccountComponentInteraction.ConfirmCustomId,
+            handler: RemoveHoyolabAccountComponentInteraction.ConfirmRemovalAsync
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: RemoveHoyolabAccountComponentInteraction.CancelCustomId,
+            handler: RemoveHoyolabAccountComponentInteraction.CancelRemovalAsync
+        );
+
         host.AddComponentInteraction<StringMenuInteractionContext>(
             customId: SelectGameRecordComponentInteraction.CustomId,
             handler: SelectGameRecordComponentInteraction.ExecuteAsync

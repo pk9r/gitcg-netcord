@@ -1,7 +1,10 @@
+using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using NetCord;
+using NetCord.Rest;
 using Xunit;
 
 namespace GitcgNetCord.MainApp.Tests;
@@ -258,5 +261,64 @@ public class HoyolabAccountRemovalTests
             .ToListAsync();
         Assert.Single(snapshots);
         Assert.Equal("custom-milestone", snapshots[0].Name);
+    }
+
+    private static MessageOptions CreateMessageOptions()
+    {
+        return (MessageOptions)Activator.CreateInstance(typeof(MessageOptions), nonPublic: true)!;
+    }
+
+    [Fact]
+    public void PopulateConfirmationPrompt_SetsEmbedAndConfirmCancelButtons()
+    {
+        var message = CreateMessageOptions();
+        const string uid = "800123456";
+        const string region = "os_asia";
+
+        RemoveHoyolabAccountComponentInteraction.PopulateConfirmationPrompt(uid, region, message);
+
+        Assert.Null(message.Content);
+        Assert.NotNull(message.Embeds);
+        var embed = message.Embeds.First();
+        Assert.Equal("Confirm Account Removal", embed.Title);
+        Assert.Contains(uid, embed.Description!);
+        Assert.Contains(region, embed.Description!);
+
+        Assert.NotNull(message.Components);
+        var row = Assert.IsType<ActionRowProperties>(message.Components.First());
+        var buttons = row.OfType<ButtonProperties>().ToList();
+        Assert.Equal(2, buttons.Count);
+
+        var confirmButton = buttons.First(b => b.Style == ButtonStyle.Danger);
+        Assert.Equal(RemoveHoyolabAccountComponentInteraction.GetConfirmCustomId(uid), confirmButton.CustomId);
+        Assert.Equal("Confirm Remove", confirmButton.Label);
+
+        var cancelButton = buttons.First(b => b.Style == ButtonStyle.Secondary);
+        Assert.Equal(RemoveHoyolabAccountComponentInteraction.CancelCustomId, cancelButton.CustomId);
+        Assert.Equal("Cancel", cancelButton.Label);
+    }
+
+    [Fact]
+    public async Task RemoveHoyolabAccountAsync_ThenPopulateRemovalResponse_SetsSuccessEmbed()
+    {
+        using var dbContext = CreateInMemoryDbContext();
+        var discordUserService = new DiscordUserService(dbContext);
+        var service = new HoyolabAccountService(dbContext, discordUserService);
+
+        const ulong userId = 10007;
+        await service.AddHoyolabAccountAsync(userId, "h1", "t1", "800999888", "os_asia");
+
+        var result = await service.RemoveHoyolabAccountAsync(userId, "800999888");
+        Assert.True(result.Success);
+
+        var message = CreateMessageOptions();
+        RemoveHoyolabAccountComponentInteraction.PopulateRemovalResponse(result, message);
+
+        Assert.NotNull(message.Embeds);
+        var embed = message.Embeds.First();
+        Assert.Equal("Hoyolab Account Removed", embed.Title);
+        Assert.NotNull(embed.Fields);
+        Assert.Contains(embed.Fields, f => f.Name == "UID" && f.Value == "800999888");
+        Assert.Contains(embed.Fields, f => f.Name == "Region" && f.Value == "os_asia");
     }
 }

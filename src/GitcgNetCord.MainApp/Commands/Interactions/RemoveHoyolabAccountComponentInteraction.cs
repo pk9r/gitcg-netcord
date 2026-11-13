@@ -13,6 +13,10 @@ public static class RemoveHoyolabAccountComponentInteraction
     public const string CustomId = "remove-hoyolab-account";
     public const string SelectMenuCustomId = "select-remove-hoyolab-account";
     public const string FallbackActiveSelectCustomId = "select-fallback-active-account";
+    public const string ConfirmCustomId = "confirm-remove-hoyolab-account";
+    public const string CancelCustomId = "cancel-remove-hoyolab-account";
+
+    public static string GetConfirmCustomId(string uid) => $"{ConfirmCustomId}:{uid}";
 
     public static async Task ExecuteAsync(
         HoyolabAccountService hoyolabAccountService,
@@ -56,13 +60,97 @@ public static class RemoveHoyolabAccountComponentInteraction
     )
     {
         await context.Interaction.SendResponseAsync(
-            InteractionCallback.DeferredMessage(flags: MessageFlags.Ephemeral)
+            InteractionCallback.DeferredModifyMessage
         );
 
         var selectedUid = context.SelectedValues[0];
-        var result = await hoyolabAccountService.RemoveHoyolabAccountAsync(context.User.Id, selectedUid);
+        var accounts = await hoyolabAccountService.GetHoyolabAccountsAsync(context.User.Id);
+        var account = accounts.FirstOrDefault(acc => acc.GameRoleId == selectedUid);
 
-        await context.Interaction.ModifyResponseAsync(m => PopulateRemovalResponse(result, m));
+        if (account == null)
+        {
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = "Account not found or does not belong to you.";
+                m.Components = [];
+                m.Embeds = [];
+            });
+            return;
+        }
+
+        await context.Interaction.ModifyResponseAsync(m =>
+        {
+            m.Components = [];
+            m.Embeds = [];
+            PopulateConfirmationPrompt(account.GameRoleId, account.Region, m);
+        });
+    }
+
+    public static async Task ConfirmRemovalAsync(
+        HoyolabAccountService hoyolabAccountService,
+        ButtonInteractionContext context,
+        string uid
+    )
+    {
+        await context.Interaction.SendResponseAsync(
+            InteractionCallback.DeferredModifyMessage
+        );
+
+        var result = await hoyolabAccountService.RemoveHoyolabAccountAsync(context.User.Id, uid);
+
+        await context.Interaction.ModifyResponseAsync(m =>
+        {
+            m.Components = [];
+            m.Embeds = [];
+            PopulateRemovalResponse(result, m);
+        });
+    }
+
+    public static async Task CancelRemovalAsync(
+        ButtonInteractionContext context
+    )
+    {
+        await context.Interaction.SendResponseAsync(
+            InteractionCallback.DeferredModifyMessage
+        );
+
+        await context.Interaction.ModifyResponseAsync(m =>
+        {
+            m.Content = "Account removal cancelled.";
+            m.Components = [];
+            m.Embeds = [];
+        });
+    }
+
+    public static void PopulateConfirmationPrompt(string uid, string region, MessageOptions message)
+    {
+        var embed = new EmbedProperties()
+            .WithTitle("Confirm Account Removal")
+            .WithColor(Color.Orange.ToNetCordColor())
+            .WithDescription($"Are you sure you want to remove Hoyolab account **{uid}** ({region})?\n\n" +
+                             "⚠️ **Warning**: This action will unlink your account and stop automated daily snapshot captures and report deliveries. Historical card statistics snapshots are preserved.")
+            .AddFields(
+                new EmbedFieldProperties().WithName("UID").WithValue(uid).WithInline(),
+                new EmbedFieldProperties().WithName("Region").WithValue(region).WithInline()
+            );
+
+        message.Content = null;
+        message.AddEmbeds(embed);
+        message.AddComponents(
+            new ActionRowProperties
+            {
+                new ButtonProperties(
+                    customId: GetConfirmCustomId(uid),
+                    label: "Confirm Remove",
+                    style: ButtonStyle.Danger
+                ),
+                new ButtonProperties(
+                    customId: CancelCustomId,
+                    label: "Cancel",
+                    style: ButtonStyle.Secondary
+                )
+            }
+        );
     }
 
     public static async Task SelectFallbackActiveAsync(

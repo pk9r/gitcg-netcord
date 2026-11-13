@@ -23,10 +23,24 @@ public static class RemoveHoyolabAccountSlashCommand
             InteractionCallback.DeferredMessage(flags: MessageFlags.Ephemeral)
         );
 
-        var result = await hoyolabAccountService.RemoveHoyolabAccountAsync(context.User.Id, account.Trim());
+        var accounts = await hoyolabAccountService.GetHoyolabAccountsAsync(context.User.Id);
+        var targetAccount = accounts.FirstOrDefault(x => x.GameRoleId == account.Trim());
+
+        if (targetAccount == null)
+        {
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = "Account not found or does not belong to you.";
+            });
+            return;
+        }
 
         await context.Interaction.ModifyResponseAsync(m =>
-            RemoveHoyolabAccountComponentInteraction.PopulateRemovalResponse(result, m)
+            RemoveHoyolabAccountComponentInteraction.PopulateConfirmationPrompt(
+                targetAccount.GameRoleId,
+                targetAccount.Region,
+                m
+            )
         );
     }
 }
