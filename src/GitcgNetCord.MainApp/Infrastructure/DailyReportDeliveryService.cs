@@ -5,6 +5,7 @@ using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Models;
 using HoyolabHttpClient.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NetCord.Gateway;
 using NetCord.Rest;
@@ -16,7 +17,8 @@ public class DailyReportDeliveryService(
     DiscordDailyReportService reportService,
     ICardStatsCalculator calculator,
     GatewayClient client,
-    ILogger<DailyReportDeliveryService> logger
+    ILogger<DailyReportDeliveryService> logger,
+    HybridCache? cache = null
 )
 {
     public async Task<int> DeliverReportsAsync(
@@ -44,7 +46,8 @@ public class DailyReportDeliveryService(
             topUseCount: 10
         );
 
-        var embed = BuildDailyReportEmbed(account, currentSnapshot, previousSnapshot, result, localGameDate);
+        var emojis = await GetApplicationEmojisMapAsync(cancellationToken);
+        var embed = BuildDailyReportEmbed(account, currentSnapshot, previousSnapshot, result, localGameDate, emojis);
         var messageProperties = new MessageProperties().AddEmbeds(embed);
 
         var deliveredCount = 0;
@@ -95,22 +98,97 @@ public class DailyReportDeliveryService(
         return deliveredCount;
     }
 
+    public async Task<Dictionary<string, string>> GetApplicationEmojisMapAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (cache != null)
+            {
+                return await cache.GetOrCreateAsync(
+                    "discord:application_emojis",
+                    async cancel =>
+                    {
+                        var appEmojis = await client.Rest.GetApplicationEmojisAsync(client.Id, cancellationToken: cancel);
+                        return appEmojis.ToDictionary(x => x.Name, x => x.ToString());
+                    },
+                    new HybridCacheEntryOptions
+                    {
+                        Expiration = TimeSpan.FromHours(1)
+                    },
+                    cancellationToken: cancellationToken
+                );
+            }
+
+            var emojis = await client.Rest.GetApplicationEmojisAsync(client.Id, cancellationToken: cancellationToken);
+            return emojis.ToDictionary(x => x.Name, x => x.ToString());
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to resolve application emojis for daily report delivery.");
+            return [];
+        }
+    }
+
+    public static DateTime GetSnapshotGameDate(CardSnapshot snapshot, TimeSpan offset, DateTime fallbackDate)
+    {
+        if (snapshot.Name.StartsWith("daily-", StringComparison.OrdinalIgnoreCase) &&
+            DateTime.TryParseExact(snapshot.Name[6..], "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var parsedDate))
+        {
+            return parsedDate;
+        }
+
+        if (snapshot.CreatedAt != default)
+        {
+            return (snapshot.CreatedAt.ToOffset(offset) - TimeSpan.FromHours(4)).Date;
+        }
+
+        return fallbackDate;
+    }
+
     public static EmbedProperties BuildDailyReportEmbed(
         HoyolabAccount account,
         CardSnapshot currentSnapshot,
         CardSnapshot? previousSnapshot,
         PeriodicStatsResult result,
-        DateTime localGameDate
+        DateTime localGameDate,
+        IReadOnlyDictionary<string, string>? emojis = null
     )
     {
+        var offset = DailySnapshotProcessor.GetServerUtcOffset(account.Region);
+        var currDate = GetSnapshotGameDate(currentSnapshot, offset, localGameDate);
+
+        string periodText;
+        if (previousSnapshot != null)
+        {
+            var prevDate = GetSnapshotGameDate(previousSnapshot, offset, localGameDate);
+            var dayDiff = (currDate - prevDate).Days;
+
+            if (dayDiff == 1)
+            {
+                periodText = $"{prevDate:yyyy-MM-dd}";
+            }
+            else if (dayDiff > 1)
+            {
+                periodText = $"{prevDate:yyyy-MM-dd} ~ {currDate:yyyy-MM-dd} ({dayDiff} days)";
+            }
+            else
+            {
+                periodText = $"{currDate:yyyy-MM-dd} (Today)";
+            }
+        }
+        else
+        {
+            periodText = $"{currDate:yyyy-MM-dd}";
+        }
+
         var embed = new EmbedProperties()
-            .WithTitle($"Daily TCG Statistics Report - {localGameDate:yyyy-MM-dd}")
+            .WithTitle($"Daily TCG Statistics Report - {periodText}")
             .WithColor(System.Drawing.Color.Purple.ToNetCordColor());
 
         embed.AddFields(
             new EmbedFieldProperties().WithName("UID").WithValue(account.GameRoleId).WithInline(),
             new EmbedFieldProperties().WithName("Region").WithValue(account.Region).WithInline(),
-            new EmbedFieldProperties().WithName("Date").WithValue($"{localGameDate:yyyy-MM-dd}").WithInline()
+            new EmbedFieldProperties().WithName("Period").WithValue(periodText).WithInline()
         );
 
         if (previousSnapshot == null || result.TotalGames == 0)
@@ -136,7 +214,10 @@ public class DailyReportDeliveryService(
             for (var i = 0; i < Math.Min(5, result.TopUseCharacters.Count); i++)
             {
                 var card = result.TopUseCharacters[i];
-                sb.AppendLine($"{i + 1}. **{card.Name}** - {card.UseCount} games");
+                var emojiPrefix = emojis != null && emojis.TryGetValue(card.Id.ToString(), out var emoji)
+                    ? $"{emoji} "
+                    : string.Empty;
+                sb.AppendLine($"{i + 1}. {emojiPrefix}**{card.Name}** - {card.UseCount} games");
             }
             embed.AddFields(new EmbedFieldProperties().WithName("Most Used Characters").WithValue(sb.ToString()).WithInline());
         }
@@ -147,7 +228,10 @@ public class DailyReportDeliveryService(
             for (var i = 0; i < Math.Min(5, result.BestWinRateCharacters.Count); i++)
             {
                 var card = result.BestWinRateCharacters[i];
-                sb.AppendLine($"{i + 1}. **{card.Name}** - {card.WinRate:P1} ({card.Proficiency}/{card.UseCount})");
+                var emojiPrefix = emojis != null && emojis.TryGetValue(card.Id.ToString(), out var emoji)
+                    ? $"{emoji} "
+                    : string.Empty;
+                sb.AppendLine($"{i + 1}. {emojiPrefix}**{card.Name}** - {card.WinRate:P1} ({card.Proficiency}/{card.UseCount})");
             }
             embed.AddFields(new EmbedFieldProperties().WithName("Highest Win Rate Characters").WithValue(sb.ToString()).WithInline());
         }
