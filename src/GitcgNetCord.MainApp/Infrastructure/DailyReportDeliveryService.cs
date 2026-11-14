@@ -63,19 +63,23 @@ public class DailyReportDeliveryService(
                     cancellationToken: cancellationToken
                 );
 
+                var destType = subscription.GuildId == 0 ? "DM" : "thread";
                 deliveredCount++;
                 logger.LogInformation(
-                    "Delivered daily report for account {AccountId} (UID: {UID}) to thread {ThreadId}.",
+                    "Delivered daily report for account {AccountId} (UID: {UID}) to {DestType} {DestinationId}.",
                     account.Id,
                     account.GameRoleId,
+                    destType,
                     subscription.ThreadId
                 );
             }
             catch (RestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Forbidden)
             {
+                var destType = subscription.GuildId == 0 ? "DM" : "thread";
                 logger.LogWarning(
                     ex,
-                    "Thread {ThreadId} is inaccessible ({StatusCode}). Disabling subscription {SubscriptionId}.",
+                    "{DestType} {DestinationId} is inaccessible ({StatusCode}). Disabling subscription {SubscriptionId}.",
+                    destType,
                     subscription.ThreadId,
                     ex.StatusCode,
                     subscription.Id
@@ -84,10 +88,12 @@ public class DailyReportDeliveryService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                var destType = subscription.GuildId == 0 ? "DM" : "thread";
                 logger.LogWarning(
                     ex,
-                    "Failed to deliver daily report for account {AccountId} to thread {ThreadId}.",
+                    "Failed to deliver daily report for account {AccountId} to {DestType} {DestinationId}.",
                     account.Id,
+                    destType,
                     subscription.ThreadId
                 );
             }

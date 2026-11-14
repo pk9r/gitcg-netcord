@@ -1,4 +1,6 @@
-﻿using GitcgNetCord.MainApp.Entities.Repositories;
+﻿using GitcgNetCord.MainApp.Entities;
+using GitcgNetCord.MainApp.Entities.Repositories;
+using GitcgNetCord.MainApp.Extensions;
 using HoyolabHttpClient;
 using HoyolabHttpClient.Responses.GameRecordCard;
 using Microsoft.EntityFrameworkCore;
@@ -45,9 +47,10 @@ public static class SelectGameRecordComponentInteraction
         var gameRecord = gameRecordList
             .First(x => x.GameRoleId == gameRoleId);
 
+        HoyolabAccount addedAccount;
         try
         {
-            await hoyolabAccountService.AddHoyolabAccountAsync(
+            addedAccount = await hoyolabAccountService.AddHoyolabAccountAsync(
                 discordUserId: context.User.Id,
                 hoyolabUserId: hoyolabAuthorize.HoyolabUserId,
                 token: hoyolabAuthorize.Token,
@@ -74,8 +77,16 @@ public static class SelectGameRecordComponentInteraction
             return;
         }
 
-        await context.Interaction.SendFollowupMessageAsync(
-            message: "Your Hoyolab account has been added successfully."
+        var (embed, components) = HoyolabAccountResponseHelper.CreateAccountAddedResponse(
+            gameRecord: gameRecord,
+            addedAccountId: addedAccount.Id
         );
+
+        await context.Interaction.SendFollowupMessageAsync(new InteractionMessageProperties
+        {
+            Embeds = [embed],
+            Components = [components],
+            Flags = MessageFlags.Ephemeral
+        });
     }
 }

@@ -160,6 +160,25 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.ToTable("DiscordDailyReportThreads");
                 });
 
+            modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordGuildConfig", b =>
+                {
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InviteUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("GuildId");
+
+                    b.ToTable("DiscordGuildConfigs");
+                });
+
             modelBuilder.Entity("GitcgNetCord.MainApp.Entities.DiscordUser", b =>
                 {
                     b.Property<decimal>("Id")

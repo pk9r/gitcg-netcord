@@ -23,7 +23,7 @@ public class HoyolabAccountService(
         return hoyolabAccounts;
     }
     
-    public async Task AddHoyolabAccountAsync(
+    public async Task<HoyolabAccount> AddHoyolabAccountAsync(
         ulong discordUserId,
         string hoyolabUserId,
         string token,
@@ -57,7 +57,7 @@ public class HoyolabAccountService(
             }
 
             await dbContext.SaveChangesAsync();
-            return;
+            return existing;
         }
 
         var discordUser = await discordUserService
@@ -67,14 +67,30 @@ public class HoyolabAccountService(
             .Reference(x => x.ActiveHoyolabAccount)
             .LoadAsync();
 
-        await discordUser.AddHoyolabAccountAsync(
-            hoyolabUserId: hoyolabUserId,
-            token: token,
-            gameRoleId: gameRoleId,
-            region: region
-        );
+        var newAccount = new HoyolabAccount
+        {
+            DiscordUserId = discordUserId,
+            HoyolabUserId = hoyolabUserId,
+            Token = token,
+            GameRoleId = gameRoleId,
+            Region = region
+        };
+
+        discordUser.HoyolabAccounts.Add(newAccount);
+
+        if (
+            discordUser.ActiveHoyolabAccount == null ||
+            discordUser.ActiveHoyolabAccount.HoyolabAccountId == Guid.Empty
+        )
+        {
+            discordUser.ActiveHoyolabAccount = new ActiveHoyolabAccount
+            {
+                HoyolabAccount = newAccount
+            };
+        }
 
         await dbContext.SaveChangesAsync();
+        return newAccount;
     }
 
     public async Task<RemoveHoyolabAccountResult> RemoveHoyolabAccountAsync(

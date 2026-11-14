@@ -1,6 +1,9 @@
+using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Commands.Slash;
 using NetCord;
 using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Hosting.Services.ComponentInteractions;
+using NetCord.Services.ComponentInteractions;
 
 namespace GitcgNetCord.MainApp.Modules.Feats;
 
@@ -89,6 +92,31 @@ public static class CardSnapshotModule
                     handler: CardSnapshotSlashCommand.ThreadListAsync
                 );
             }
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: DailySnapshotPromptComponentInteraction.EnableCustomId,
+            handler: DailySnapshotPromptComponentInteraction.EnableAsync
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: DailySnapshotPromptComponentInteraction.SkipCustomId,
+            handler: DailySnapshotPromptComponentInteraction.SkipAsync
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: DailyReportDestinationComponentInteraction.DmCustomId,
+            handler: DailyReportDestinationComponentInteraction.SelectDmAsync
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: DailyReportDestinationComponentInteraction.ChannelCustomId,
+            handler: DailyReportDestinationComponentInteraction.SelectChannelAsync
+        );
+
+        host.AddComponentInteraction<ButtonInteractionContext>(
+            customId: DailyReportDestinationComponentInteraction.SkipCustomId,
+            handler: DailyReportDestinationComponentInteraction.SkipDestinationAsync
         );
     }
 }

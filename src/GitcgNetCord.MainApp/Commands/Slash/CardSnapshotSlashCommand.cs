@@ -475,11 +475,15 @@ public static class CardSnapshotSlashCommand
 
         if (thread.OwnerId != context.User.Id)
         {
-            await context.Interaction.ModifyResponseAsync(m =>
+            var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
+            if (!isSubscriber)
             {
-                m.Content = "Only the creator or owner of this thread can configure daily reports.";
-            });
-            return;
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Content = "Only the creator, owner, or subscriber of this thread can configure daily reports.";
+                });
+                return;
+            }
         }
 
         var isApproved = await reportService.IsApprovedParentChannelAsync(thread.ParentId);
@@ -568,11 +572,15 @@ public static class CardSnapshotSlashCommand
 
         if (thread.OwnerId != context.User.Id)
         {
-            await context.Interaction.ModifyResponseAsync(m =>
+            var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
+            if (!isSubscriber)
             {
-                m.Content = "Only the creator or owner of this thread can manage daily report subscriptions.";
-            });
-            return;
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Content = "Only the creator, owner, or subscriber of this thread can manage daily report subscriptions.";
+                });
+                return;
+            }
         }
 
         HoyolabAccount? targetAccount = null;

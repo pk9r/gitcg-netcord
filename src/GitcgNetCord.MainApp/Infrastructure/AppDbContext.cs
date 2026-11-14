@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<GameVersion> GameVersions { get; set; } = null!;
     public DbSet<DiscordDailyReportChannel> DiscordDailyReportChannels { get; set; } = null!;
     public DbSet<DiscordDailyReportThread> DiscordDailyReportThreads { get; set; } = null!;
+    public DbSet<DiscordGuildConfig> DiscordGuildConfigs { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -114,6 +115,13 @@ public class AppDbContext : DbContext
                 .WithMany(x => x.DailyReportThreads)
                 .HasForeignKey(x => x.HoyolabAccountId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<DiscordGuildConfig>(config =>
+        {
+            config.HasKey(x => x.GuildId);
+            config.Property(x => x.GuildId)
+                .ValueGeneratedNever();
         });
 
         base.OnModelCreating(builder);

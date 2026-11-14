@@ -34,6 +34,7 @@ public static class Extensions
         host.AddDuelModule();
         host.AddHoyolabAccountModule();
         host.AddHoyolabGcgModule();
+        host.AddServerModule();
 
         // Utility modules
         host.AddUpdateEmojisModule();
@@ -96,6 +97,7 @@ public static class Extensions
         
         services.AddScoped<ActiveHoyolabAccountService>();
         services.AddScoped<DiscordCardCodeChannelService>();
+        services.AddScoped<DiscordGuildConfigService>();
         services.AddScoped<DiscordDailyReportService>();
         services.AddScoped<DailyReportDeliveryService>();
         services.AddScoped<DailySnapshotProcessor>();

@@ -178,4 +178,70 @@ public class DiscordDailyReportService(
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<bool> IsUserSubscriberAsync(
+        ulong threadId,
+        ulong discordUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.DiscordDailyReportThreads
+            .AnyAsync(
+                x => x.ThreadId == threadId && x.DiscordUserId == discordUserId && x.IsEnabled,
+                cancellationToken
+            );
+    }
+
+    public async Task<DiscordDailyReportThread> SubscribeDmAsync(
+        ulong dmChannelId,
+        ulong discordUserId,
+        Guid hoyolabAccountId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await SubscribeThreadAsync(
+            threadId: dmChannelId,
+            guildId: 0,
+            discordUserId: discordUserId,
+            hoyolabAccountId: hoyolabAccountId,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<DiscordDailyReportThread?> FindSubscriptionInGuildAsync(
+        ulong guildId,
+        Guid hoyolabAccountId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.DiscordDailyReportThreads
+            .FirstOrDefaultAsync(
+                x => x.GuildId == guildId && x.HoyolabAccountId == hoyolabAccountId && x.IsEnabled,
+                cancellationToken
+            );
+    }
+
+    public async Task<DiscordDailyReportThread?> FindDmSubscriptionAsync(
+        ulong discordUserId,
+        Guid hoyolabAccountId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.DiscordDailyReportThreads
+            .FirstOrDefaultAsync(
+                x => x.GuildId == 0 && x.DiscordUserId == discordUserId && x.HoyolabAccountId == hoyolabAccountId && x.IsEnabled,
+                cancellationToken
+            );
+    }
+
+    public async Task<List<DiscordDailyReportThread>> GetSubscriptionsForUserAsync(
+        ulong discordUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.DiscordDailyReportThreads
+            .Include(x => x.HoyolabAccount)
+            .Where(x => x.DiscordUserId == discordUserId && x.IsEnabled)
+            .ToListAsync(cancellationToken);
+    }
 }

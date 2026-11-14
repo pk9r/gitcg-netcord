@@ -1,11 +1,15 @@
 ﻿using GitcgNetCord.MainApp.Commands.Interactions;
+using GitcgNetCord.MainApp.Entities;
+using GitcgNetCord.MainApp.Entities.Repositories;
 using HoyolabHttpClient;
 using HoyolabHttpClient.Responses.GameRecordCard;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services;
 using NetCord.Services.ApplicationCommands;
+using Npgsql;
 
 namespace GitcgNetCord.MainApp.Commands.Slash;
 
@@ -51,6 +55,8 @@ public static class AddHoyolabAccountSlashCommand
             .GetRequiredService<HoyolabHttpClientService>();
         var cache = serviceProvider
             .GetRequiredService<HybridCache>();
+        var hoyolabAccountService = serviceProvider
+            .GetRequiredService<HoyolabAccountService>();
 
         var authorize = new HoyolabAuthorize(
             HoyolabUserId: hoyolabUserId, Token: token
@@ -71,6 +77,71 @@ public static class AddHoyolabAccountSlashCommand
             return;
         }
 
+        var genshinRecords = gameRecordCard.List
+            .Where(x => x.GameId == 2) // Filter for Genshin Impact
+            .DistinctBy(x => x.GameRoleId)
+            .ToList();
+
+        if (genshinRecords.Count == 0)
+        {
+            await context.Interaction.ModifyResponseAsync(message =>
+            {
+                message.Content = "No Genshin Impact characters found on this Hoyolab account. Please ensure you have created a Genshin Impact character and linked it to this Hoyolab account.";
+            });
+            return;
+        }
+
+        if (genshinRecords.Count == 1)
+        {
+            var singleRecord = genshinRecords[0];
+            HoyolabAccount addedAccount;
+            try
+            {
+                addedAccount = await hoyolabAccountService.AddHoyolabAccountAsync(
+                    discordUserId: context.User.Id,
+                    hoyolabUserId: authorize.HoyolabUserId,
+                    token: authorize.Token,
+                    gameRoleId: singleRecord.GameRoleId,
+                    region: singleRecord.Region
+                );
+            }
+            catch (DbUpdateException e) when (
+                e.InnerException is PostgresException { SqlState: "23505" } // Unique violation
+            )
+            {
+                await context.Interaction.ModifyResponseAsync(message =>
+                {
+                    message.Content = "You already have a Hoyolab account added.";
+                });
+                return;
+            }
+            catch
+            {
+                await context.Interaction.ModifyResponseAsync(message =>
+                {
+                    message.Content = "Failed to add Hoyolab account.";
+                });
+                return;
+            }
+
+            var (embed, components) = HoyolabAccountResponseHelper.CreateAccountAddedResponse(
+                gameRecord: singleRecord,
+                addedAccountId: addedAccount.Id
+            );
+
+            await context.Interaction.ModifyResponseAsync(message =>
+            {
+                message.Content = null;
+                message.AddEmbeds(embed);
+                message.AddComponents(components);
+            });
+            return;
+        }
+
+        // Multiple characters (Count > 1)
+        var userAccounts = await hoyolabAccountService.GetHoyolabAccountsAsync(context.User.Id);
+        var existingUids = userAccounts.Select(x => x.GameRoleId).ToHashSet();
+
         await cache.SetAsync(
             key: $"game-record-list:{context.User.Id}",
             value: gameRecordCard.List
@@ -85,14 +156,20 @@ public static class AddHoyolabAccountSlashCommand
             message.WithComponents([
                 new StringMenuProperties(
                     customId: SelectGameRecordComponentInteraction.CustomId
-                ).AddOptions(gameRecordCard.List
-                    .Where(x => x.GameId == 2) // Filter for Genshin Impact
-                    .Select(x => new StringMenuSelectOptionProperties(
+                ).AddOptions(genshinRecords
+                    .Select(x =>
+                    {
+                        var isLinked = existingUids.Contains(x.GameRoleId);
+                        var description = isLinked
+                            ? $"Lv. {x.Level} {x.RegionName} ({x.GameRoleId}) [Already Linked - Select to update token]"
+                            : $"Lv. {x.Level} {x.RegionName} ({x.GameRoleId})";
+
+                        return new StringMenuSelectOptionProperties(
                             label: x.Nickname,
                             value: x.GameRoleId
                         )
-                        .WithDescription($"Lv. {x.Level} {x.RegionName} ({x.GameRoleId})")
-                    )
+                        .WithDescription(description);
+                    })
                 )
             ]);
         });
