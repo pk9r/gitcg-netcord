@@ -2,7 +2,7 @@ schema: spec-driven
 
 context: |
   Project: gitcg-netcord (Discord Bot for Genshin Impact Genius Invokation TCG).
-  Stack: .NET 10, C# 13, .NET Aspire 13.6, NetCord (1.0.0-beta.29), SkiaSharp, EF Core (PostgreSQL), Redis.
+  Stack: .NET 11, C# 15, .NET Aspire 13.6, NetCord (1.0.0-beta.29), SkiaSharp, EF Core (PostgreSQL), Redis.
   User Interface Language: ALL user-facing Discord elements (commands, parameter descriptions, embed titles/fields/footers, notices, error messages) MUST be written in English.
   Graphics Safety: Strictly ensure all SkiaSharp native objects (SKBitmap, SKCanvas, SKImage, SKPaint) are properly disposed.
   Git Conventions: Use Conventional Commits (feat, fix, refactor, docs) adhering to project history.
