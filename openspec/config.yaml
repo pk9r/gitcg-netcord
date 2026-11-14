@@ -32,7 +32,7 @@ operations:
     guidance:
       - "Consult Context7 MCP if encountering unexpected library behavior or unfamiliar API signatures"
       - "Aspire Process Ownership: NEVER run `aspire stop` (which terminates developer's interactive session/dashboard) and NEVER run `aspire start` (which creates unmanageable detached background daemons). The developer owns the Aspire AppHost lifecycle."
-      - "Aspire File-Lock Prevention: If Aspire is running (`aspire ps`) and `dotnet build` or `dotnet test` fails due to file locks on GitcgNetCord.MainApp.dll (MSB3491/CS2012), do NOT stop the AppHost. Instead, stop only the specific resource using `aspire resource main stop`, perform the build/test, and restart it with `aspire resource main start`."
+      - "Session-Level Aspire Resource Lifecycle: If Aspire is active (`aspire ps`), proactively stop the application resource once at the very beginning of the apply session using `aspire resource main stop`. Keep it stopped throughout task implementation and testing to eliminate Windows file-lock delays (MSB3491/CS2012) and avoid Discord gateway reconnect churn. When all tasks are complete (or when implementation pauses), restart the resource once using `aspire resource main start`."
       - "Scoped Testing: Prefer scoping `dotnet test` to the target test project (e.g., `dotnet test tests/GitcgNetCord.MainApp.Tests/GitcgNetCord.MainApp.Tests.csproj`) rather than running solution-wide tests."
       - "Utilize Aspire CLI (`aspire ps`, `aspire describe`) or Aspire skills to inspect AppHost health, logs, and telemetry when verifying integration changes"
       - "Always run `dotnet test` and ensure all tests pass before completing tasks"
