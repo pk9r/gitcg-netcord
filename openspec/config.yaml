@@ -22,10 +22,13 @@ rules:
     - "Separate architectural layers: Domain models, Service/Rendering logic, and NetCord command modules"
     - "When adding dependencies or services, define their integration within the Aspire AppHost and ServiceDefaults"
     - "Detail SkiaSharp canvas allocation and image stream lifetimes to prevent native memory leaks"
+    - "Database Design & Optimization: When reviewing, modifying, or creating EF Core models, queries, and DbContext configurations, utilize the `dotnet-data` skill (specifically `optimizing-ef-core-queries`). Use `dbx` MCP tools (`dbx_describe_table`, `dbx_list_tables`) to inspect existing database schemas."
+    - "Database Migration Policy: NEVER design application startup (`Program.cs`, service registration, or background workers) to execute runtime database migrations (`Database.Migrate()`, `Database.EnsureCreated()`, or DDL). All database schema evolutions MUST be handled via EF Core CLI migration tooling (`dotnet ef`)."
   tasks:
-    - "Order implementation: Models/Migrations -> Aspire AppHost Wiring -> Core/Skia Logic -> NetCord Handlers/Endpoints -> Unit Tests"
+    - "Order implementation: EF Core Migrations (via dotnet ef) -> Aspire AppHost Wiring -> Core/Skia Logic -> NetCord Handlers/Endpoints -> Unit Tests"
     - "Keep tasks small, testable, and independently verifiable"
-    - "Always include an explicit task for running and passing `dotnet test`"
+    - "Always include an explicit task for running and passing `dotnet test` (scoping with `dotnet-test` skills)"
+    - "Database Tasks: Tasks for database schema changes MUST specify `dotnet ef migrations add` and `dotnet ef database update` with explicit `--project` and `--startup-project` flags; NEVER create tasks that add runtime migration code to `Program.cs`."
 
 operations:
   apply:
@@ -33,6 +36,9 @@ operations:
       - "Consult Context7 MCP if encountering unexpected library behavior or unfamiliar API signatures"
       - "Aspire Process Ownership: NEVER run `aspire stop` (which terminates developer's interactive session/dashboard) and NEVER run `aspire start` (which creates unmanageable detached background daemons). The developer owns the Aspire AppHost lifecycle."
       - "Session-Level Aspire Resource Lifecycle: If Aspire is active (`aspire ps`), proactively stop the application resource once at the very beginning of the apply session using `aspire resource main stop`. Keep it stopped throughout task implementation and testing to eliminate Windows file-lock delays (MSB3491/CS2012) and avoid Discord gateway reconnect churn. When all tasks are complete (or when implementation pauses), restart the resource once using `aspire resource main start`."
+      - "Database Schema Migrations: NEVER execute migrations at runtime in `Program.cs` or service initialization. For schema changes, ALWAYS use: `dotnet ef migrations add <MigrationName> --project src/GitcgNetCord.MainApp --startup-project src/GitcgNetCord.MainApp` and apply with `dotnet ef database update --project src/GitcgNetCord.MainApp --startup-project src/GitcgNetCord.MainApp`."
+      - "Database State Inspection with DBX MCP: Use `dbx` MCP tools (`dbx_describe_table`, `dbx_list_tables`, `dbx_execute_query`) to verify existing schemas, columns, constraints, and check `__EFMigrationsHistory` out-of-band without modifying production code."
+      - "Dotnet Skills Utilization: Leverage installed `.NET Agent Skills` when working with specialized .NET tasks: use `dotnet-data` (`optimizing-ef-core-queries`) for EF Core query performance, `dotnet-msbuild` for MSBuild diagnostics or project reference troubleshooting, and `dotnet-test` for test execution and analysis."
       - "Scoped Testing: Prefer scoping `dotnet test` to the target test project (e.g., `dotnet test tests/GitcgNetCord.MainApp.Tests/GitcgNetCord.MainApp.Tests.csproj`) rather than running solution-wide tests."
       - "Utilize Aspire CLI (`aspire ps`, `aspire describe`) or Aspire skills to inspect AppHost health, logs, and telemetry when verifying integration changes"
       - "Always run `dotnet test` and ensure all tests pass before completing tasks"
