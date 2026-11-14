@@ -32,6 +32,27 @@ This repository is released under the [MIT License](LICENSE.md).
 
 ## 6. 🛠️ Development
 
+### AI Agent Environment & Skills Optimization
+
+If developing with Antigravity / Gemini AI coding agents, maintain the optimized skill profile to avoid context budget limits dropping core Aspire and C# capabilities.
+
+```powershell
+# Check current plugin and skill budget status
+pwsh scripts/optimize-agent-skills.ps1 -Status
+
+# Apply Strategy B: Zero-Truncation (disables 12 unused/auxiliary plugins, keeps 6 core plugins)
+pwsh scripts/optimize-agent-skills.ps1 -Apply
+
+# Enable Blazor on-demand when developing web dashboard components
+pwsh scripts/optimize-agent-skills.ps1 -EnableBlazor
+
+# Disable Blazor to reclaim context for pure bot backend work
+pwsh scripts/optimize-agent-skills.ps1 -DisableBlazor
+
+# Restore all plugins when switching projects
+pwsh scripts/optimize-agent-skills.ps1 -Restore
+```
+
 ### Versioning
 
 Follows a `MAJOR.MINOR.PATCH` versioning scheme:
