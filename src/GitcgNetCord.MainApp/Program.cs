@@ -1,5 +1,6 @@
 using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
+using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Endpoints;
 using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
@@ -18,6 +19,8 @@ if (!string.IsNullOrEmpty(azureVaultUri))
         credential: new DefaultAzureCredential()
     );
 }
+
+builder.Configuration.ValidateDiscordConfiguration();
 
 builder.AddRedisDistributedCache("redis");
 builder.Services.AddHybridCache();
@@ -76,5 +79,7 @@ app.MapGet(
 );
 
 app.MapDailyReportEndpoints();
+
+app.MapDefaultEndpoints();
 
 app.Run();

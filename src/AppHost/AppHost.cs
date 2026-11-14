@@ -4,7 +4,8 @@ using Projects;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var main = builder
-    .AddProject<GitcgNetCord_MainApp>("main");
+    .AddProject<GitcgNetCord_MainApp>("main")
+    .WithHttpHealthCheck("/health");
 
 var useRemoteRedis = builder.Configuration
     .GetValue<bool>("AppBuilderOptions:UseRemoteRedis");

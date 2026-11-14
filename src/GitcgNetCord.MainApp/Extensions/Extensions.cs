@@ -3,6 +3,7 @@ using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.GatewayHandlers;
 using GitcgNetCord.MainApp.Infrastructure;
+using GitcgNetCord.MainApp.Infrastructure.HealthChecks;
 using GitcgNetCord.MainApp.Infrastructure.HoyolabServices;
 using GitcgNetCord.MainApp.Models;
 using GitcgNetCord.MainApp.Modules;
@@ -59,7 +60,12 @@ public static class Extensions
             .AddGatewayHandler<CardCodeGatewayHandler>()
             .AddGatewayHandler<ReplaysGatewayHandler>()
             .AddGatewayHandler<DeckEditorGatewayHandler>()
-            .AddGatewayHandler<DuelAssistantGatewayHandler>();
+            .AddGatewayHandler<DuelAssistantGatewayHandler>()
+            .AddGatewayHandler<DiscordBotReadyGatewayHandler>();
+
+        services.AddSingleton<DiscordBotHealthTracker>();
+        services.AddHealthChecks()
+            .AddCheck<DiscordBotHealthCheck>("discord_bot", tags: ["ready"]);
 
         services
             .AddOptionsWithValidateOnStart<CardCodeModuleOptions>()
