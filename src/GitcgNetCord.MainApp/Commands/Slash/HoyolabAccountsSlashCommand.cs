@@ -1,4 +1,5 @@
-﻿using GitcgNetCord.MainApp.Commands.Interactions;
+﻿using GitcgNetCord.MainApp.Commands.Autocompletes;
+using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Extensions;
 using HoyolabHttpClient;
@@ -11,6 +12,68 @@ namespace GitcgNetCord.MainApp.Commands.Slash;
 
 public static class HoyolabAccountsSlashCommand
 {
+    public static async Task ListAsync(
+        IServiceProvider serviceProvider,
+        ApplicationCommandContext context
+    )
+    {
+        await ExecuteAsync(serviceProvider, context);
+    }
+
+    public static async Task AddAsync(
+        ApplicationCommandContext context
+    )
+    {
+        await context.Interaction.SendResponseAsync(
+            InteractionCallback.Modal(AddHoyolabAccountComponentInteraction.CreateModal())
+        );
+    }
+
+    public static async Task SwitchAsync(
+        ActiveHoyolabAccountService activeHoyolabAccountService,
+        HoyolabAccountService hoyolabAccountService,
+        ApplicationCommandContext context,
+        [SlashCommandParameter(
+            Description = "Genshin Impact UID of the account to set as active.",
+            AutocompleteProviderType = typeof(HoyolabAccountAutocompleteProvider)
+        )]
+        string account
+    )
+    {
+        await context.Interaction.SendResponseAsync(
+            InteractionCallback.DeferredMessage(flags: MessageFlags.Ephemeral)
+        );
+
+        var uid = account.Trim();
+        var accounts = await hoyolabAccountService.GetHoyolabAccountsAsync(context.User.Id);
+
+        if (!accounts.Any())
+        {
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = "You do not have any linked HoYoLAB accounts. Please link an account first.";
+            });
+            return;
+        }
+
+        var target = accounts.FirstOrDefault(x => x.GameRoleId == uid);
+        if (target == null)
+        {
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = $"HoYoLAB account with UID '{uid}' was not found or does not belong to you.";
+            });
+            return;
+        }
+
+        await activeHoyolabAccountService.UpdateActiveHoyolabAccountAsync(context.User.Id, uid);
+
+        await context.Interaction.ModifyResponseAsync(m =>
+        {
+            m.Content = $"Successfully switched active HoYoLAB account to: `{target.GameRoleId}` ({target.Region}).";
+        });
+    }
+
     public static async Task ExecuteAsync(
         // manual inject services
         // useful for another module calling this command

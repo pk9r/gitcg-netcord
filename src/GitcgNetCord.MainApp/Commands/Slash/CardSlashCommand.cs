@@ -81,7 +81,11 @@ public static class CardSlashCommand
                 .GetGlobalApplicationCommandsAsync(context.Client.Id);
 
             var accountCommand = commands
-                .First(x => x.Name == "hoyolab-accounts");
+                .FirstOrDefault(x => x.Name == "hoyolab");
+
+            var commandMention = accountCommand != null
+                ? $"</hoyolab list:{accountCommand.Id}>"
+                : "`/hoyolab list`";
 
             await context.Interaction.ModifyResponseAsync(message =>
             {
@@ -90,7 +94,7 @@ public static class CardSlashCommand
                     .WithDescription(
                         $"""
                          You don't have an active Hoyolab account.
-                         Please use the command {accountCommand} to set one up.
+                         Please use the command {commandMention} to set one up.
                          """
                     )
                     .WithColor(Color.Red.ToNetCordColor())

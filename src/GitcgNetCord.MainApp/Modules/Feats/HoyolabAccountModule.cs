@@ -1,5 +1,6 @@
 ﻿using GitcgNetCord.MainApp.Commands.Interactions;
 using GitcgNetCord.MainApp.Commands.Slash;
+using NetCord;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
@@ -10,25 +11,37 @@ public static class HoyolabAccountModule
 {
     public static void AddHoyolabAccountModule(this IHost host)
     {
-        if (host is WebApplication app && app.Environment.IsDevelopment())
-        {
-            host.AddSlashCommand(
-                name: "add-hoyolab-account",
-                description: "Add your Hoyolab account.",
-                handler: AddHoyolabAccountSlashCommand.ExecuteAsync
-            );
-        }
-
-        host.AddSlashCommand(
-            name: "hoyolab-accounts",
-            description: "Manage your Hoyolab account.",
-            handler: HoyolabAccountsSlashCommand.ExecuteAsync
+        var hoyolabGroup = host.AddSlashCommandGroup(
+            name: "hoyolab",
+            description: "Manage linked HoYoLAB accounts."
+        ).AddContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDMChannel,
+            InteractionContextType.DMChannel
         );
 
-        host.AddSlashCommand(
-            name: "remove-hoyolab-account",
-            description: "Remove a linked Hoyolab account.",
+        hoyolabGroup.AddSubCommand(
+            name: "list",
+            description: "List all linked HoYoLAB accounts and view the current active account.",
+            handler: HoyolabAccountsSlashCommand.ListAsync
+        );
+
+        hoyolabGroup.AddSubCommand(
+            name: "add",
+            description: "Link a new HoYoLAB account via secure modal dialogue.",
+            handler: HoyolabAccountsSlashCommand.AddAsync
+        );
+
+        hoyolabGroup.AddSubCommand(
+            name: "remove",
+            description: "Remove a linked HoYoLAB account.",
             handler: RemoveHoyolabAccountSlashCommand.ExecuteAsync
+        );
+
+        hoyolabGroup.AddSubCommand(
+            name: "switch",
+            description: "Switch your active HoYoLAB account.",
+            handler: HoyolabAccountsSlashCommand.SwitchAsync
         );
 
         host.AddComponentInteraction<ButtonInteractionContext>(

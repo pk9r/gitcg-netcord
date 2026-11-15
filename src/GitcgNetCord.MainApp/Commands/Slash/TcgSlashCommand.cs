@@ -48,7 +48,10 @@ public static class TcgSlashCommand
             .GetGlobalApplicationCommandsAsync(context.Client.Id);
             
         var accountCommand = commands
-            .First(x => x.Name == "hoyolab-accounts");
+            .FirstOrDefault(x => x.Name == "hoyolab");
+        var commandMention = accountCommand != null
+            ? $"</hoyolab list:{accountCommand.Id}>"
+            : "`/hoyolab list`";
         
         if (hoyolabAccount == null && string.IsNullOrWhiteSpace(uid))
         {
@@ -60,7 +63,7 @@ public static class TcgSlashCommand
                     .WithDescription(
                         $"""
                         You must have a Hoyolab account linked to your Discord account, or provide a UID.
-                        Please use the {accountCommand} command to link your Hoyolab account.
+                        Please use the {commandMention} command to link your Hoyolab account.
                         Alternatively, you can provide a UID directly.
                         """
                     )

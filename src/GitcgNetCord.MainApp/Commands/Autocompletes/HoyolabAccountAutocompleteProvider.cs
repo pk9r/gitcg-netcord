@@ -1,3 +1,4 @@
+using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using NetCord;
 using NetCord.Rest;
@@ -15,7 +16,15 @@ public class HoyolabAccountAutocompleteProvider(
     )
     {
         var accounts = await hoyolabAccountService.GetHoyolabAccountsAsync(context.User.Id);
-        var keyword = option.Value ?? string.Empty;
+        return BuildChoices(accounts, option.Value);
+    }
+
+    public static IEnumerable<ApplicationCommandOptionChoiceProperties> BuildChoices(
+        IEnumerable<HoyolabAccount> accounts,
+        string? keyword
+    )
+    {
+        keyword ??= string.Empty;
 
         var choices = new List<ApplicationCommandOptionChoiceProperties>();
         foreach (var acc in accounts)

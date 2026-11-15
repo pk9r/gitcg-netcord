@@ -36,7 +36,7 @@ public static class CardSnapshotSlashCommand
             {
                 msg.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
-                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab-accounts` command to set one up.")
+                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab list` command to set one up.")
                     .WithColor(System.Drawing.Color.Red.ToNetCordColor())
                 );
             });
@@ -141,7 +141,7 @@ public static class CardSnapshotSlashCommand
             {
                 msg.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
-                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab-accounts` command to set one up.")
+                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab list` command to set one up.")
                     .WithColor(System.Drawing.Color.Red.ToNetCordColor())
                 );
             });
@@ -188,7 +188,7 @@ public static class CardSnapshotSlashCommand
             {
                 msg.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
-                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab-accounts` command to set one up.")
+                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab list` command to set one up.")
                     .WithColor(System.Drawing.Color.Red.ToNetCordColor())
                 );
             });
@@ -268,7 +268,7 @@ public static class CardSnapshotSlashCommand
             {
                 msg.AddEmbeds(new EmbedProperties()
                     .WithTitle("Error")
-                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab-accounts` command to set one up.")
+                    .WithDescription("You don't have an active Hoyolab account. Please use the `/hoyolab list` command to set one up.")
                     .WithColor(System.Drawing.Color.Red.ToNetCordColor())
                 );
             });
@@ -350,10 +350,10 @@ public static class CardSnapshotSlashCommand
         }
 
         if (context.User is GuildInteractionUser guildUser &&
-            !guildUser.Permissions.HasFlag(Permissions.ManageChannels) &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
             !guildUser.Permissions.HasFlag(Permissions.Administrator))
         {
-            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage channels (ManageChannels).");
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
             return;
         }
 
@@ -385,10 +385,10 @@ public static class CardSnapshotSlashCommand
         }
 
         if (context.User is GuildInteractionUser guildUser &&
-            !guildUser.Permissions.HasFlag(Permissions.ManageChannels) &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
             !guildUser.Permissions.HasFlag(Permissions.Administrator))
         {
-            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage channels (ManageChannels).");
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
             return;
         }
 
@@ -419,10 +419,10 @@ public static class CardSnapshotSlashCommand
         }
 
         if (context.User is GuildInteractionUser guildUser &&
-            !guildUser.Permissions.HasFlag(Permissions.ManageChannels) &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
             !guildUser.Permissions.HasFlag(Permissions.Administrator))
         {
-            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage channels (ManageChannels).");
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
             return;
         }
 
@@ -504,7 +504,7 @@ public static class CardSnapshotSlashCommand
             {
                 await context.Interaction.ModifyResponseAsync(m =>
                 {
-                    m.Content = "You don't have an active Hoyolab account. Please use `/hoyolab-accounts` to set one up.";
+                    m.Content = "You don't have an active Hoyolab account. Please use `/hoyolab list` to set one up.";
                 });
                 return;
             }
