@@ -45,31 +45,6 @@ public static class CardSnapshotModule
         );
 
         group.AddSubCommandGroup(
-            name: "channel",
-            description: "Manage approved parent channels for daily thread reporting (Admin).",
-            builder: channelGroup =>
-            {
-                channelGroup.AddSubCommand(
-                    name: "add",
-                    description: "Register an approved parent channel for daily thread reporting.",
-                    handler: CardSnapshotSlashCommand.ChannelAddAsync
-                );
-
-                channelGroup.AddSubCommand(
-                    name: "remove",
-                    description: "Unregister an approved parent channel from daily thread reporting.",
-                    handler: CardSnapshotSlashCommand.ChannelRemoveAsync
-                );
-
-                channelGroup.AddSubCommand(
-                    name: "list",
-                    description: "List approved parent channels registered for daily thread reporting.",
-                    handler: CardSnapshotSlashCommand.ChannelListAsync
-                );
-            }
-        );
-
-        group.AddSubCommandGroup(
             name: "thread",
             description: "Configure daily statistics report delivery in this thread.",
             builder: threadGroup =>

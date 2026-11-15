@@ -40,6 +40,14 @@ public static class CardCodeChannelSlashCommand
             return;
         }
 
+        if (context.User is GuildInteractionUser guildUser &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
+            !guildUser.Permissions.HasFlag(Permissions.Administrator))
+        {
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
+            return;
+        }
+
         var targetChannelId = channel?.Id ?? context.Channel.Id;
 
         var result = await channelService.AddAsync(targetChannelId, guildId, type);
@@ -75,6 +83,14 @@ public static class CardCodeChannelSlashCommand
             return;
         }
 
+        if (context.User is GuildInteractionUser guildUser &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
+            !guildUser.Permissions.HasFlag(Permissions.Administrator))
+        {
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
+            return;
+        }
+
         var targetChannelId = channel?.Id ?? context.Channel.Id;
 
         var removed = await channelService.RemoveAsync(targetChannelId);
@@ -102,6 +118,14 @@ public static class CardCodeChannelSlashCommand
             {
                 m.Content = "This command can only be used in a server.";
             });
+            return;
+        }
+
+        if (context.User is GuildInteractionUser guildUser &&
+            !guildUser.Permissions.HasFlag(Permissions.ManageGuild) &&
+            !guildUser.Permissions.HasFlag(Permissions.Administrator))
+        {
+            await context.Interaction.ModifyResponseAsync(m => m.Content = "You do not have permission to manage server settings (ManageGuild).");
             return;
         }
 
