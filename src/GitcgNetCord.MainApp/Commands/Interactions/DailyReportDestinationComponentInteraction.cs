@@ -229,7 +229,7 @@ public static class DailyReportDestinationComponentInteraction
 
         await context.Interaction.ModifyResponseAsync(m =>
         {
-            m.Content = "Daily statistics capture is active. Reports will not be posted to Discord, but your data is being recorded. You can configure a destination anytime using `/card-snapshot thread subscribe`.";
+            m.Content = "Daily statistics capture is active. Reports will not be posted to Discord, but your data is being recorded. You can configure a destination anytime using `/card-snapshot report subscribe`.";
             m.Components = [];
             m.Embeds = [];
         });

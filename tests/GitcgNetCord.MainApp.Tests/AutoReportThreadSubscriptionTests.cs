@@ -276,4 +276,75 @@ public class AutoReportThreadSubscriptionTests
         Assert.Contains("not-a-valid-url", field.Value);
         Assert.Null(actionRow);
     }
+
+    [Fact]
+    public async Task DiscordDailyReportService_UnsubscribeDm_RemovesDmSubscriptionSuccessfully()
+    {
+        using var dbContext = CreateInMemoryDbContext();
+        var service = new DiscordDailyReportService(dbContext);
+
+        const ulong dmChannelId = 999111;
+        const ulong userId = 555001;
+        var accountId = Guid.NewGuid();
+
+        await service.SubscribeDmAsync(dmChannelId, userId, accountId);
+        var subBefore = await service.FindDmSubscriptionAsync(userId, accountId);
+        Assert.NotNull(subBefore);
+
+        var removed = await service.UnsubscribeThreadAsync(dmChannelId, accountId);
+        Assert.True(removed);
+
+        var subAfter = await service.FindDmSubscriptionAsync(userId, accountId);
+        Assert.Null(subAfter);
+
+        var secondRemoved = await service.UnsubscribeThreadAsync(dmChannelId, accountId);
+        Assert.False(secondRemoved);
+    }
+
+    [Fact]
+    public async Task DiscordDailyReportService_GetSubscriptionsForUser_ReturnsBothDmAndThreadSubscriptions()
+    {
+        using var dbContext = CreateInMemoryDbContext();
+        var service = new DiscordDailyReportService(dbContext);
+
+        const ulong userId = 777001;
+        const ulong dmChannelId = 112233;
+        const ulong threadId = 445566;
+        const ulong guildId = 998877;
+
+        var account1 = new HoyolabAccount
+        {
+            Id = Guid.NewGuid(),
+            DiscordUserId = userId,
+            GameRoleId = "800000001",
+            Region = "os_asia"
+        };
+        var account2 = new HoyolabAccount
+        {
+            Id = Guid.NewGuid(),
+            DiscordUserId = userId,
+            GameRoleId = "800000002",
+            Region = "os_usa"
+        };
+        await dbContext.HoyolabAccounts.AddRangeAsync(account1, account2);
+        await dbContext.SaveChangesAsync();
+
+        await service.SubscribeDmAsync(dmChannelId, userId, account1.Id);
+        await service.SubscribeThreadAsync(threadId, guildId, userId, account2.Id);
+
+        var userSubs = await service.GetSubscriptionsForUserAsync(userId);
+        Assert.Equal(2, userSubs.Count);
+
+        var dmSub = userSubs.FirstOrDefault(s => s.GuildId == 0);
+        Assert.NotNull(dmSub);
+        Assert.Equal(dmChannelId, dmSub.ThreadId);
+        Assert.NotNull(dmSub.HoyolabAccount);
+        Assert.Equal("800000001", dmSub.HoyolabAccount.GameRoleId);
+
+        var threadSub = userSubs.FirstOrDefault(s => s.GuildId == guildId);
+        Assert.NotNull(threadSub);
+        Assert.Equal(threadId, threadSub.ThreadId);
+        Assert.NotNull(threadSub.HoyolabAccount);
+        Assert.Equal("800000002", threadSub.HoyolabAccount.GameRoleId);
+    }
 }

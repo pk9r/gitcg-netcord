@@ -447,9 +447,9 @@ public static class CardSnapshotSlashCommand
         await context.Interaction.ModifyResponseAsync(m => m.AddEmbeds(embed));
     }
 
-    // --- Thread User Subcommands ---
+    // --- Report User Subcommands ---
 
-    public static async Task ThreadSubscribeAsync(
+    public static async Task ReportSubscribeAsync(
         DiscordDailyReportService reportService,
         ActiveHoyolabAccountService activeHoyolabAccountService,
         HoyolabAccountService hoyolabAccountService,
@@ -464,38 +464,6 @@ public static class CardSnapshotSlashCommand
         await context.Interaction.SendResponseAsync(
             InteractionCallback.DeferredMessage(MessageFlags.Ephemeral)
         );
-
-        if (context.Channel is not GuildThread thread)
-        {
-            await context.Interaction.ModifyResponseAsync(m =>
-            {
-                m.Content = "This command can only be used inside a Thread.";
-            });
-            return;
-        }
-
-        if (thread.OwnerId != context.User.Id)
-        {
-            var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
-            if (!isSubscriber)
-            {
-                await context.Interaction.ModifyResponseAsync(m =>
-                {
-                    m.Content = "Only the creator, owner, or subscriber of this thread can configure daily reports.";
-                });
-                return;
-            }
-        }
-
-        var isApproved = await reportService.IsApprovedParentChannelAsync(thread.ParentId);
-        if (!isApproved)
-        {
-            await context.Interaction.ModifyResponseAsync(m =>
-            {
-                m.Content = "This thread's parent channel is not registered as an approved daily report channel. Please ask a server admin to run `/card-snapshot channel add`.";
-            });
-            return;
-        }
 
         HoyolabAccount? targetAccount = null;
         if (string.IsNullOrWhiteSpace(account))
@@ -526,27 +494,90 @@ public static class CardSnapshotSlashCommand
 
         if (!targetAccount.IsDailySnapshotEnabled)
         {
+            var destinationLabel = context.Channel is GuildThread ? "thread reports" : "daily reports";
             await context.Interaction.ModifyResponseAsync(m =>
             {
-                m.Content = $"Account (UID: {targetAccount.GameRoleId}) does not have Daily Snapshot enabled. Please run `/card-snapshot daily enabled:True` before subscribing to thread reports.";
+                m.Content = $"Account (UID: {targetAccount.GameRoleId}) does not have Daily Snapshot enabled. Please run `/card-snapshot daily enabled:True` before subscribing to {destinationLabel}.";
             });
             return;
         }
 
-        await reportService.SubscribeThreadAsync(
-            threadId: thread.Id,
-            guildId: thread.GuildId,
-            discordUserId: context.User.Id,
-            hoyolabAccountId: targetAccount.Id
-        );
+        if (context.Channel is GuildThread thread)
+        {
+            if (thread.OwnerId != context.User.Id)
+            {
+                var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
+                if (!isSubscriber)
+                {
+                    await context.Interaction.ModifyResponseAsync(m =>
+                    {
+                        m.Content = "Only the creator, owner, or subscriber of this thread can configure daily reports.";
+                    });
+                    return;
+                }
+            }
+
+            var isApproved = await reportService.IsApprovedParentChannelAsync(thread.ParentId);
+            if (!isApproved)
+            {
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Content = "This thread's parent channel is not registered as an approved daily report channel. Please ask a server admin to run `/server report-channel add`.";
+                });
+                return;
+            }
+
+            await reportService.SubscribeThreadAsync(
+                threadId: thread.Id,
+                guildId: thread.GuildId,
+                discordUserId: context.User.Id,
+                hoyolabAccountId: targetAccount.Id
+            );
+
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = $"Successfully subscribed daily statistics reports for account (UID: {targetAccount.GameRoleId}, {targetAccount.Region}) to this thread.";
+            });
+            return;
+        }
+
+        if (context.Channel is DMChannel || context.Interaction.GuildId == null)
+        {
+            ulong dmChannelId;
+            try
+            {
+                var dm = await context.Client.Rest.GetDMChannelAsync(context.User.Id);
+                dmChannelId = dm.Id;
+            }
+            catch (RestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Content = "Cannot send Direct Messages to you. Please enable 'Allow direct messages from server members' in your Discord privacy settings and try again.";
+                });
+                return;
+            }
+
+            await reportService.SubscribeDmAsync(
+                dmChannelId: dmChannelId,
+                discordUserId: context.User.Id,
+                hoyolabAccountId: targetAccount.Id
+            );
+
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = $"✅ Successfully subscribed! Daily TCG statistics reports for UID `{targetAccount.GameRoleId}` will be delivered directly to your Direct Messages (DMs) at 04:00 AM server reset.";
+            });
+            return;
+        }
 
         await context.Interaction.ModifyResponseAsync(m =>
         {
-            m.Content = $"Successfully subscribed daily statistics reports for account (UID: {targetAccount.GameRoleId}, {targetAccount.Region}) to this thread.";
+            m.Content = "To receive daily reports in this server, run this command inside a Thread under an approved report channel. Or run this command in Direct Messages (DM) to receive private reports.";
         });
     }
 
-    public static async Task ThreadUnsubscribeAsync(
+    public static async Task ReportUnsubscribeAsync(
         DiscordDailyReportService reportService,
         ActiveHoyolabAccountService activeHoyolabAccountService,
         HoyolabAccountService hoyolabAccountService,
@@ -561,28 +592,6 @@ public static class CardSnapshotSlashCommand
         await context.Interaction.SendResponseAsync(
             InteractionCallback.DeferredMessage(MessageFlags.Ephemeral)
         );
-
-        if (context.Channel is not GuildThread thread)
-        {
-            await context.Interaction.ModifyResponseAsync(m =>
-            {
-                m.Content = "This command can only be used inside a Thread.";
-            });
-            return;
-        }
-
-        if (thread.OwnerId != context.User.Id)
-        {
-            var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
-            if (!isSubscriber)
-            {
-                await context.Interaction.ModifyResponseAsync(m =>
-                {
-                    m.Content = "Only the creator, owner, or subscriber of this thread can manage daily report subscriptions.";
-                });
-                return;
-            }
-        }
 
         HoyolabAccount? targetAccount = null;
         if (string.IsNullOrWhiteSpace(account))
@@ -604,16 +613,61 @@ public static class CardSnapshotSlashCommand
             return;
         }
 
-        var removed = await reportService.UnsubscribeThreadAsync(thread.Id, targetAccount.Id);
+        if (context.Channel is GuildThread thread)
+        {
+            if (thread.OwnerId != context.User.Id)
+            {
+                var isSubscriber = await reportService.IsUserSubscriberAsync(thread.Id, context.User.Id);
+                if (!isSubscriber)
+                {
+                    await context.Interaction.ModifyResponseAsync(m =>
+                    {
+                        m.Content = "Only the creator, owner, or subscriber of this thread can manage daily report subscriptions.";
+                    });
+                    return;
+                }
+            }
+
+            var removed = await reportService.UnsubscribeThreadAsync(thread.Id, targetAccount.Id);
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = removed
+                    ? $"Successfully unsubscribed daily reports for account (UID: {targetAccount.GameRoleId}) in this thread."
+                    : $"Account (UID: {targetAccount.GameRoleId}) is not subscribed to daily reports in this thread.";
+            });
+            return;
+        }
+
+        if (context.Channel is DMChannel || context.Interaction.GuildId == null)
+        {
+            var dmChannelId = context.Channel.Id;
+            try
+            {
+                var dm = await context.Client.Rest.GetDMChannelAsync(context.User.Id);
+                dmChannelId = dm.Id;
+            }
+            catch
+            {
+                // Fallback to current context channel ID
+            }
+
+            var removed = await reportService.UnsubscribeThreadAsync(dmChannelId, targetAccount.Id);
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Content = removed
+                    ? $"Successfully unsubscribed daily reports for account (UID: {targetAccount.GameRoleId}) from your Direct Messages."
+                    : $"Account (UID: {targetAccount.GameRoleId}) is not currently subscribed to daily reports in Direct Messages.";
+            });
+            return;
+        }
+
         await context.Interaction.ModifyResponseAsync(m =>
         {
-            m.Content = removed
-                ? $"Successfully unsubscribed daily reports for account (UID: {targetAccount.GameRoleId}) in this thread."
-                : $"Account (UID: {targetAccount.GameRoleId}) is not subscribed to daily reports in this thread.";
+            m.Content = "This command must be executed inside a Discord Thread (for server reports) or in Direct Messages (for private reports).";
         });
     }
 
-    public static async Task ThreadListAsync(
+    public static async Task ReportListAsync(
         DiscordDailyReportService reportService,
         ApplicationCommandContext context
     )
@@ -626,54 +680,56 @@ public static class CardSnapshotSlashCommand
         {
             var gatewayClient = context.Client as GatewayClient;
 
-            if (context.Channel is not GuildThread thread)
+            if (context.Channel is GuildThread thread)
             {
-                var suggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: context.Interaction.GuildId);
-                var (suggestField, suggestActionRow) = BuildServerSuggestions(suggested, gatewayClient);
+                var subscriptions = await reportService.GetThreadSubscriptionsAsync(thread.Id);
+                var threadSuggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: thread.GuildId);
+                var (field, actionRow) = BuildServerSuggestions(threadSuggested, gatewayClient);
 
-                var embed = new EmbedProperties()
-                    .WithTitle("Daily Report Thread Information")
-                    .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
-                    .WithDescription(
-                        "This command is designed to list subscriptions inside an active Discord Thread.\n\n" +
-                        "To configure or view daily statistics reports, run commands inside a report thread created under an approved parent channel."
-                    );
-
-                if (suggestField != null)
+                if (subscriptions.Count == 0)
                 {
-                    embed.AddFields(suggestField);
+                    var embed = new EmbedProperties()
+                        .WithTitle("Thread Daily Report Subscriptions")
+                        .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                        .WithDescription("No Hoyolab accounts are currently subscribed to daily reports in this thread.");
+
+                    if (field != null)
+                    {
+                        embed.AddFields(field);
+                    }
+
+                    await context.Interaction.ModifyResponseAsync(m =>
+                    {
+                        m.Embeds = [embed];
+                        if (actionRow != null)
+                        {
+                            m.Components = [actionRow];
+                        }
+                    });
+                    return;
                 }
 
-                await context.Interaction.ModifyResponseAsync(m =>
+                var sb = new StringBuilder();
+                foreach (var sub in subscriptions)
                 {
-                    m.Embeds = [embed];
-                    if (suggestActionRow != null)
-                    {
-                        m.Components = [suggestActionRow];
-                    }
-                });
-                return;
-            }
+                    var acc = sub.HoyolabAccount;
+                    var info = acc != null ? $"UID: **{acc.GameRoleId}** ({acc.Region})" : "Unknown Account";
+                    sb.AppendLine($"• {info} - Subscribed by: <@{sub.DiscordUserId}> (<t:{sub.CreatedAt.ToUnixTimeSeconds()}:d>)");
+                }
 
-            var subscriptions = await reportService.GetThreadSubscriptionsAsync(thread.Id);
-            var threadSuggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: thread.GuildId);
-            var (field, actionRow) = BuildServerSuggestions(threadSuggested, gatewayClient);
-
-            if (subscriptions.Count == 0)
-            {
-                var embed = new EmbedProperties()
+                var subsEmbed = new EmbedProperties()
                     .WithTitle("Thread Daily Report Subscriptions")
                     .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
-                    .WithDescription("No Hoyolab accounts are currently subscribed to daily reports in this thread.");
+                    .WithDescription(sb.ToString());
 
                 if (field != null)
                 {
-                    embed.AddFields(field);
+                    subsEmbed.AddFields(field);
                 }
 
                 await context.Interaction.ModifyResponseAsync(m =>
                 {
-                    m.Embeds = [embed];
+                    m.Embeds = [subsEmbed];
                     if (actionRow != null)
                     {
                         m.Components = [actionRow];
@@ -682,30 +738,116 @@ public static class CardSnapshotSlashCommand
                 return;
             }
 
-            var sb = new StringBuilder();
-            foreach (var sub in subscriptions)
+            if (context.Channel is DMChannel || context.Interaction.GuildId == null)
             {
-                var acc = sub.HoyolabAccount;
-                var info = acc != null ? $"UID: **{acc.GameRoleId}** ({acc.Region})" : "Unknown Account";
-                sb.AppendLine($"• {info} - Subscribed by: <@{sub.DiscordUserId}> (<t:{sub.CreatedAt.ToUnixTimeSeconds()}:d>)");
+                var userSubs = await reportService.GetSubscriptionsForUserAsync(context.User.Id);
+                var suggested = await reportService.GetSuggestedReportGuildsAsync();
+                var (suggestField, suggestActionRow) = BuildServerSuggestions(suggested, gatewayClient);
+
+                if (userSubs.Count == 0)
+                {
+                    var embed = new EmbedProperties()
+                        .WithTitle("Your Daily Report Subscriptions")
+                        .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                        .WithDescription(
+                            "You are not currently subscribed to daily reports in Direct Messages or server threads.\n\n" +
+                            "• To receive reports in DMs, run `/card-snapshot report subscribe` here.\n" +
+                            "• To receive reports in a server, run `/card-snapshot report subscribe` inside an approved report thread."
+                        );
+
+                    if (suggestField != null)
+                    {
+                        embed.AddFields(suggestField);
+                    }
+
+                    await context.Interaction.ModifyResponseAsync(m =>
+                    {
+                        m.Embeds = [embed];
+                        if (suggestActionRow != null)
+                        {
+                            m.Components = [suggestActionRow];
+                        }
+                    });
+                    return;
+                }
+
+                var dmSubs = userSubs.Where(s => s.GuildId == 0).ToList();
+                var threadSubs = userSubs.Where(s => s.GuildId != 0).ToList();
+
+                var sb = new StringBuilder();
+                if (dmSubs.Count > 0)
+                {
+                    sb.AppendLine("📩 **Direct Messages**");
+                    foreach (var s in dmSubs)
+                    {
+                        var acc = s.HoyolabAccount;
+                        var info = acc != null ? $"UID: `{acc.GameRoleId}` ({acc.Region})" : "Unknown Account";
+                        sb.AppendLine($"• {info} (Subscribed: <t:{s.CreatedAt.ToUnixTimeSeconds()}:d>)");
+                    }
+                    sb.AppendLine();
+                }
+
+                if (threadSubs.Count > 0)
+                {
+                    sb.AppendLine("🧵 **Server Threads**");
+                    foreach (var s in threadSubs)
+                    {
+                        var acc = s.HoyolabAccount;
+                        var info = acc != null ? $"UID: `{acc.GameRoleId}`" : "Unknown Account";
+                        var guildName = gatewayClient != null && gatewayClient.Cache.Guilds.TryGetValue(s.GuildId, out var g) && !string.IsNullOrWhiteSpace(g.Name)
+                            ? g.Name
+                            : $"Server {s.GuildId}";
+                        sb.AppendLine($"• {info} in **{guildName}**: <#{s.ThreadId}> (<t:{s.CreatedAt.ToUnixTimeSeconds()}:d>)");
+                    }
+                }
+
+                var subsEmbed = new EmbedProperties()
+                    .WithTitle("Your Daily Report Subscriptions")
+                    .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                    .WithDescription(sb.ToString().TrimEnd());
+
+                if (suggestField != null)
+                {
+                    subsEmbed.AddFields(suggestField);
+                }
+
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Embeds = [subsEmbed];
+                    if (suggestActionRow != null)
+                    {
+                        m.Components = [suggestActionRow];
+                    }
+                    else
+                    {
+                        m.Components = [];
+                    }
+                });
+                return;
             }
 
-            var subsEmbed = new EmbedProperties()
-                .WithTitle("Thread Daily Report Subscriptions")
-                .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
-                .WithDescription(sb.ToString());
+            var guildSuggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: context.Interaction.GuildId);
+            var (guildSuggestField, guildSuggestActionRow) = BuildServerSuggestions(guildSuggested, gatewayClient);
 
-            if (field != null)
+            var infoEmbed = new EmbedProperties()
+                .WithTitle("Daily Report Information")
+                .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                .WithDescription(
+                    "This command is designed to be run inside an active Discord Thread (to view thread subscriptions) or in Direct Messages (to view your personal subscriptions).\n\n" +
+                    "To configure or view daily statistics reports, run `/card-snapshot report` inside a report thread or in DMs."
+                );
+
+            if (guildSuggestField != null)
             {
-                subsEmbed.AddFields(field);
+                infoEmbed.AddFields(guildSuggestField);
             }
 
             await context.Interaction.ModifyResponseAsync(m =>
             {
-                m.Embeds = [subsEmbed];
-                if (actionRow != null)
+                m.Embeds = [infoEmbed];
+                if (guildSuggestActionRow != null)
                 {
-                    m.Components = [actionRow];
+                    m.Components = [guildSuggestActionRow];
                 }
             });
         }
@@ -713,7 +855,7 @@ public static class CardSnapshotSlashCommand
         {
             await context.Interaction.ModifyResponseAsync(m =>
             {
-                m.Content = $"An error occurred while retrieving thread subscriptions: {ex.Message}";
+                m.Content = $"An error occurred while retrieving report subscriptions: {ex.Message}";
                 m.Embeds = [];
                 m.Components = [];
             });

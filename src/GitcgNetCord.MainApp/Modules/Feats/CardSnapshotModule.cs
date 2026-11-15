@@ -45,26 +45,26 @@ public static class CardSnapshotModule
         );
 
         group.AddSubCommandGroup(
-            name: "thread",
-            description: "Configure daily statistics report delivery in this thread.",
-            builder: threadGroup =>
+            name: "report",
+            description: "Configure daily statistics report delivery in this channel or direct messages.",
+            builder: reportGroup =>
             {
-                threadGroup.AddSubCommand(
+                reportGroup.AddSubCommand(
                     name: "subscribe",
-                    description: "Subscribe a Hoyolab account to daily statistics reports in this thread.",
-                    handler: CardSnapshotSlashCommand.ThreadSubscribeAsync
+                    description: "Subscribe a Hoyolab account to daily statistics reports in this channel or DM.",
+                    handler: CardSnapshotSlashCommand.ReportSubscribeAsync
                 );
 
-                threadGroup.AddSubCommand(
+                reportGroup.AddSubCommand(
                     name: "unsubscribe",
-                    description: "Unsubscribe a Hoyolab account from daily statistics reports in this thread.",
-                    handler: CardSnapshotSlashCommand.ThreadUnsubscribeAsync
+                    description: "Unsubscribe a Hoyolab account from daily statistics reports in this channel or DM.",
+                    handler: CardSnapshotSlashCommand.ReportUnsubscribeAsync
                 );
 
-                threadGroup.AddSubCommand(
+                reportGroup.AddSubCommand(
                     name: "list",
-                    description: "List Hoyolab accounts currently subscribed to daily reports in this thread.",
-                    handler: CardSnapshotSlashCommand.ThreadListAsync
+                    description: "List Hoyolab accounts currently subscribed to daily reports in this channel or your DMs.",
+                    handler: CardSnapshotSlashCommand.ReportListAsync
                 );
             }
         );
