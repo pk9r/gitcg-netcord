@@ -244,4 +244,38 @@ public class DiscordDailyReportService(
             .Where(x => x.DiscordUserId == discordUserId && x.IsEnabled)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<SuggestedReportGuild>> GetSuggestedReportGuildsAsync(
+        ulong? excludeGuildId = null,
+        int limit = 3,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var query = dbContext.DiscordGuildConfigs
+            .Where(c => c.InviteUrl != null && c.InviteUrl != "" &&
+                        dbContext.DiscordDailyReportChannels.Any(ch => ch.GuildId == c.GuildId));
+
+        if (excludeGuildId.HasValue)
+        {
+            query = query.Where(c => c.GuildId != excludeGuildId.Value);
+        }
+
+        var results = await query
+            .Select(c => new
+            {
+                c.GuildId,
+                InviteUrl = c.InviteUrl!,
+                ReportChannelCount = dbContext.DiscordDailyReportChannels.Count(ch => ch.GuildId == c.GuildId)
+            })
+            .OrderByDescending(x => x.ReportChannelCount)
+            .ThenBy(x => x.GuildId)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        return results
+            .Select(x => new SuggestedReportGuild(x.GuildId, x.InviteUrl, x.ReportChannelCount))
+            .ToList();
+    }
 }
+
+public record SuggestedReportGuild(ulong GuildId, string InviteUrl, int ReportChannelCount);

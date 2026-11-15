@@ -1,7 +1,9 @@
+using GitcgNetCord.MainApp.Commands.Slash;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
 using GitcgNetCord.MainApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using NetCord.Rest;
 using Xunit;
 
 namespace GitcgNetCord.MainApp.Tests;
@@ -167,5 +169,111 @@ public class AutoReportThreadSubscriptionTests
         Assert.True(dmCustomId.Length <= 100, $"dmCustomId '{dmCustomId}' exceeds 100 chars (was {dmCustomId.Length})");
         Assert.True(skipCustomId.Length <= 100, $"skipCustomId '{skipCustomId}' exceeds 100 chars (was {skipCustomId.Length})");
         Assert.True(enableCustomId.Length <= 100, $"enableCustomId '{enableCustomId}' exceeds 100 chars (was {enableCustomId.Length})");
+    }
+
+    [Fact]
+    public async Task DiscordDailyReportService_GetSuggestedReportGuilds_FiltersAndExcludesCorrectly()
+    {
+        using var dbContext = CreateInMemoryDbContext();
+        var reportService = new DiscordDailyReportService(dbContext);
+        var configService = new DiscordGuildConfigService(dbContext);
+
+        const ulong guildEligible1 = 1001;
+        const ulong guildEligible2 = 1002;
+        const ulong guildNoChannels = 1003;
+        const ulong guildNoInvite = 1004;
+        const ulong guildEmptyInvite = 1005;
+
+        // Setup Guild 1001: 2 report channels, invite
+        await configService.SetInviteUrlAsync(guildEligible1, "https://discord.gg/guild1");
+        await reportService.AddReportChannelAsync(channelId: 2001, guildId: guildEligible1);
+        await reportService.AddReportChannelAsync(channelId: 2002, guildId: guildEligible1);
+
+        // Setup Guild 1002: 1 report channel, invite
+        await configService.SetInviteUrlAsync(guildEligible2, "https://discord.gg/guild2");
+        await reportService.AddReportChannelAsync(channelId: 2003, guildId: guildEligible2);
+
+        // Setup Guild 1003: invite, but NO report channels
+        await configService.SetInviteUrlAsync(guildNoChannels, "https://discord.gg/guild3");
+
+        // Setup Guild 1004: report channel, but NO invite
+        await reportService.AddReportChannelAsync(channelId: 2004, guildId: guildNoInvite);
+
+        // Setup Guild 1005: empty invite
+        await configService.SetInviteUrlAsync(guildEmptyInvite, "");
+        await reportService.AddReportChannelAsync(channelId: 2005, guildId: guildEmptyInvite);
+
+        // Test 1: All suggestions
+        var allSuggested = await reportService.GetSuggestedReportGuildsAsync();
+        Assert.Equal(2, allSuggested.Count);
+        Assert.Equal(guildEligible1, allSuggested[0].GuildId);
+        Assert.Equal(2, allSuggested[0].ReportChannelCount);
+        Assert.Equal("https://discord.gg/guild1", allSuggested[0].InviteUrl);
+        Assert.Equal(guildEligible2, allSuggested[1].GuildId);
+        Assert.Equal(1, allSuggested[1].ReportChannelCount);
+
+        // Test 2: Exclude guildEligible1
+        var excludedSuggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: guildEligible1);
+        Assert.Single(excludedSuggested);
+        Assert.Equal(guildEligible2, excludedSuggested[0].GuildId);
+
+        // Test 3: Limit 1
+        var limitedSuggested = await reportService.GetSuggestedReportGuildsAsync(limit: 1);
+        Assert.Single(limitedSuggested);
+        Assert.Equal(guildEligible1, limitedSuggested[0].GuildId);
+    }
+
+    [Fact]
+    public void BuildServerSuggestions_WhenListIsEmpty_ReturnsNullFieldAndNullActionRow()
+    {
+        var (field, actionRow) = CardSnapshotSlashCommand.BuildServerSuggestions([], null);
+
+        Assert.Null(field);
+        Assert.Null(actionRow);
+    }
+
+    [Fact]
+    public void BuildServerSuggestions_WithEligibleGuilds_ConstructsFormattedEmbedFieldAndLinkButtons()
+    {
+        var guilds = new List<SuggestedReportGuild>
+        {
+            new(1001, "https://discord.gg/inv1", 1),
+            new(1002, "https://discord.gg/inv2", 3)
+        };
+
+        var (field, actionRow) = CardSnapshotSlashCommand.BuildServerSuggestions(guilds, null);
+
+        Assert.NotNull(field);
+        Assert.Equal("Suggested Report Servers", field.Name);
+        Assert.Contains("1 report channel", field.Value);
+        Assert.Contains("3 report channels", field.Value);
+        Assert.Contains("[Join Server](https://discord.gg/inv1)", field.Value);
+        Assert.Contains("[Join Server](https://discord.gg/inv2)", field.Value);
+
+        Assert.NotNull(actionRow);
+        var buttons = actionRow.ToList();
+        Assert.Equal(2, buttons.Count);
+        var btn1 = Assert.IsType<LinkButtonProperties>(buttons[0]);
+        Assert.Equal("https://discord.gg/inv1", btn1.Url);
+        Assert.Equal("Join Community Server", btn1.Label);
+
+        var btn2 = Assert.IsType<LinkButtonProperties>(buttons[1]);
+        Assert.Equal("https://discord.gg/inv2", btn2.Url);
+        Assert.Equal("Join Community Server", btn2.Label);
+    }
+
+    [Fact]
+    public void BuildServerSuggestions_WithInvalidUri_ExcludesFromActionRow()
+    {
+        var guilds = new List<SuggestedReportGuild>
+        {
+            new(1001, "not-a-valid-url", 2)
+        };
+
+        var (field, actionRow) = CardSnapshotSlashCommand.BuildServerSuggestions(guilds, null);
+
+        Assert.NotNull(field);
+        Assert.Contains("not-a-valid-url", field.Value);
+        Assert.Null(actionRow);
     }
 }

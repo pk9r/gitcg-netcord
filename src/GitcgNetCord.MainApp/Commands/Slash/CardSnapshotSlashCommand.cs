@@ -7,6 +7,7 @@ using GitcgNetCord.MainApp.Extensions;
 using GitcgNetCord.MainApp.Infrastructure;
 using HoyolabHttpClient;
 using NetCord;
+using NetCord.Gateway;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 
@@ -621,38 +622,147 @@ public static class CardSnapshotSlashCommand
             InteractionCallback.DeferredMessage(MessageFlags.Ephemeral)
         );
 
-        if (context.Channel is not GuildThread thread)
+        try
+        {
+            var gatewayClient = context.Client as GatewayClient;
+
+            if (context.Channel is not GuildThread thread)
+            {
+                var suggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: context.Interaction.GuildId);
+                var (suggestField, suggestActionRow) = BuildServerSuggestions(suggested, gatewayClient);
+
+                var embed = new EmbedProperties()
+                    .WithTitle("Daily Report Thread Information")
+                    .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                    .WithDescription(
+                        "This command is designed to list subscriptions inside an active Discord Thread.\n\n" +
+                        "To configure or view daily statistics reports, run commands inside a report thread created under an approved parent channel."
+                    );
+
+                if (suggestField != null)
+                {
+                    embed.AddFields(suggestField);
+                }
+
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Embeds = [embed];
+                    if (suggestActionRow != null)
+                    {
+                        m.Components = [suggestActionRow];
+                    }
+                });
+                return;
+            }
+
+            var subscriptions = await reportService.GetThreadSubscriptionsAsync(thread.Id);
+            var threadSuggested = await reportService.GetSuggestedReportGuildsAsync(excludeGuildId: thread.GuildId);
+            var (field, actionRow) = BuildServerSuggestions(threadSuggested, gatewayClient);
+
+            if (subscriptions.Count == 0)
+            {
+                var embed = new EmbedProperties()
+                    .WithTitle("Thread Daily Report Subscriptions")
+                    .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                    .WithDescription("No Hoyolab accounts are currently subscribed to daily reports in this thread.");
+
+                if (field != null)
+                {
+                    embed.AddFields(field);
+                }
+
+                await context.Interaction.ModifyResponseAsync(m =>
+                {
+                    m.Embeds = [embed];
+                    if (actionRow != null)
+                    {
+                        m.Components = [actionRow];
+                    }
+                });
+                return;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var sub in subscriptions)
+            {
+                var acc = sub.HoyolabAccount;
+                var info = acc != null ? $"UID: **{acc.GameRoleId}** ({acc.Region})" : "Unknown Account";
+                sb.AppendLine($"• {info} - Subscribed by: <@{sub.DiscordUserId}> (<t:{sub.CreatedAt.ToUnixTimeSeconds()}:d>)");
+            }
+
+            var subsEmbed = new EmbedProperties()
+                .WithTitle("Thread Daily Report Subscriptions")
+                .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
+                .WithDescription(sb.ToString());
+
+            if (field != null)
+            {
+                subsEmbed.AddFields(field);
+            }
+
+            await context.Interaction.ModifyResponseAsync(m =>
+            {
+                m.Embeds = [subsEmbed];
+                if (actionRow != null)
+                {
+                    m.Components = [actionRow];
+                }
+            });
+        }
+        catch (Exception ex)
         {
             await context.Interaction.ModifyResponseAsync(m =>
             {
-                m.Content = "This command can only be used inside a Thread.";
+                m.Content = $"An error occurred while retrieving thread subscriptions: {ex.Message}";
+                m.Embeds = [];
+                m.Components = [];
             });
-            return;
         }
+    }
 
-        var subscriptions = await reportService.GetThreadSubscriptionsAsync(thread.Id);
-        if (subscriptions.Count == 0)
+    public static (EmbedFieldProperties? Field, ActionRowProperties? ActionRow) BuildServerSuggestions(
+        List<SuggestedReportGuild> suggestedGuilds,
+        GatewayClient? gatewayClient
+    )
+    {
+        if (suggestedGuilds.Count == 0)
+            return (null, null);
+
+        var lines = new List<string>();
+        var actionRow = new ActionRowProperties();
+
+        foreach (var g in suggestedGuilds)
         {
-            await context.Interaction.ModifyResponseAsync(m =>
+            var guildName = gatewayClient != null &&
+                            gatewayClient.Cache.Guilds.TryGetValue(g.GuildId, out var guild) &&
+                            !string.IsNullOrWhiteSpace(guild.Name)
+                ? guild.Name
+                : "Community Server";
+
+            var channelText = g.ReportChannelCount == 1 ? "channel" : "channels";
+            lines.Add($"• **{guildName}** ({g.ReportChannelCount} report {channelText}) - [Join Server]({g.InviteUrl})");
+
+            if (!string.IsNullOrWhiteSpace(g.InviteUrl) &&
+                Uri.TryCreate(g.InviteUrl.Trim(), UriKind.Absolute, out var uri) &&
+                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             {
-                m.Content = "No Hoyolab accounts are currently subscribed to daily reports in this thread.";
-            });
-            return;
+                var label = $"Join {guildName}";
+                if (label.Length > 80)
+                    label = label[..77] + "...";
+
+                actionRow.Add(new LinkButtonProperties(
+                    url: uri.ToString(),
+                    label: label
+                ));
+            }
         }
 
-        var sb = new StringBuilder();
-        foreach (var sub in subscriptions)
+        var field = new EmbedFieldProperties
         {
-            var acc = sub.HoyolabAccount;
-            var info = acc != null ? $"UID: **{acc.GameRoleId}** ({acc.Region})" : "Unknown Account";
-            sb.AppendLine($"• {info} - Subscribed by: <@{sub.DiscordUserId}> (<t:{sub.CreatedAt.ToUnixTimeSeconds()}:d>)");
-        }
+            Name = "Suggested Report Servers",
+            Value = string.Join("\n", lines)
+        };
 
-        var embed = new EmbedProperties()
-            .WithTitle("Thread Daily Report Subscriptions")
-            .WithColor(System.Drawing.Color.Purple.ToNetCordColor())
-            .WithDescription(sb.ToString());
-
-        await context.Interaction.ModifyResponseAsync(m => m.AddEmbeds(embed));
+        return (field, actionRow.Any() ? actionRow : null);
     }
 }
