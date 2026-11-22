@@ -48,6 +48,19 @@ public class DiscordBotHealthTracker
     }
 
     /// <summary>
+    /// Restores the ready state upon Discord Gateway session resumption (RESUMED).
+    /// </summary>
+    public void SetResumed(TimeSpan? latency = null)
+    {
+        if (latency.HasValue)
+        {
+            _latency = latency.Value;
+        }
+
+        _isReady = true;
+    }
+
+    /// <summary>
     /// Marks the bot as unready upon Gateway disconnect or session termination.
     /// </summary>
     public void SetDisconnected()

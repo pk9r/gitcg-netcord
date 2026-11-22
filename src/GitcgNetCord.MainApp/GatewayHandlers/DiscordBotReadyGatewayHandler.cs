@@ -5,34 +5,29 @@ using NetCord.Hosting.Gateway;
 namespace GitcgNetCord.MainApp.GatewayHandlers;
 
 /// <summary>
-/// Gateway event handler that updates the bot health tracker when the READY event is received
-/// and watches for disconnect events on the GatewayClient.
+/// Gateway event handler that updates the bot health tracker when READY, RESUME,
+/// or DISCONNECT events occur on the GatewayClient.
 /// </summary>
-public class DiscordBotReadyGatewayHandler : IReadyGatewayHandler
+public class DiscordBotReadyGatewayHandler(
+    GatewayClient client,
+    DiscordBotHealthTracker tracker
+) : IReadyGatewayHandler, IResumeGatewayHandler, IDisconnectGatewayHandler
 {
-    private readonly GatewayClient _client;
-    private readonly DiscordBotHealthTracker _tracker;
-
-    public DiscordBotReadyGatewayHandler(
-        GatewayClient client,
-        DiscordBotHealthTracker tracker
-    )
-    {
-        _client = client;
-        _tracker = tracker;
-
-        _client.Disconnect += OnDisconnectAsync;
-    }
-
     public ValueTask HandleAsync(ReadyEventArgs args)
     {
-        _tracker.SetReady(args.User.Username, _client.Latency);
+        tracker.SetReady(args.User.Username, client.Latency);
         return default;
     }
 
-    private ValueTask OnDisconnectAsync(DisconnectEventArgs args)
+    public ValueTask HandleAsync()
     {
-        _tracker.SetDisconnected();
+        tracker.SetResumed(client.Latency);
+        return default;
+    }
+
+    public ValueTask HandleAsync(DisconnectEventArgs args)
+    {
+        tracker.SetDisconnected();
         return default;
     }
 }

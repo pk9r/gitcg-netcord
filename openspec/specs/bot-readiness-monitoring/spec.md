@@ -20,7 +20,7 @@ The application SHALL validate that required bot credentials (specifically the D
 - **THEN** the application SHALL proceed with host construction and start background hosted services normally
 
 ### Requirement: Bot Readiness State Tracking
-The system SHALL track the live Discord Gateway connectivity and readiness lifecycle. The readiness tracker MUST remain unready during initialization and SHALL transition to ready only after the Discord Gateway `READY` event has been received by the bot client.
+The system SHALL track the live Discord Gateway connectivity and readiness lifecycle. The readiness tracker MUST remain unready during initialization and SHALL transition to ready after the Discord Gateway `READY` event is received or after a session resumption (`RESUMED`) completes.
 
 #### Scenario: Initial state before Gateway handshake
 - **GIVEN** the application has booted and Kestrel is listening
@@ -36,6 +36,11 @@ The system SHALL track the live Discord Gateway connectivity and readiness lifec
 - **GIVEN** the bot was previously in a ready state
 - **WHEN** the Discord Gateway connection drops or disconnects
 - **THEN** the readiness tracker SHALL update readiness to false until reconnection and session resumption complete
+
+#### Scenario: Transition to ready upon Gateway session resumption
+- **GIVEN** the bot was marked unready due to a Gateway connection drop or disconnect
+- **WHEN** the Discord Gateway session is successfully resumed and the Gateway emits the `RESUMED` event
+- **THEN** the readiness tracker SHALL transition readiness to true, retaining the authenticated bot username and updating gateway latency
 
 ### Requirement: Readiness and Liveness Health Check Probes
 The system SHALL expose HTTP health check endpoints at `/health` for readiness and `/alive` for liveness. The `/health` endpoint MUST reflect the real-time bot readiness state as well as dependent service availability, returning HTTP 503 when unready and HTTP 200 when ready.

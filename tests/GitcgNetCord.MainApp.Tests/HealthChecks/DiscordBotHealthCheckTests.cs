@@ -52,4 +52,25 @@ public class DiscordBotHealthCheckTests
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
         Assert.NotNull(result.Data["lastDisconnectAt"]);
     }
+
+    [Fact]
+    public async Task CheckHealthAsync_WhenResumedAfterDisconnect_ReturnsHealthyWithRetainedMetadata()
+    {
+        var context = new HealthCheckContext();
+        _tracker.SetReady("TestBot#1234", TimeSpan.FromMilliseconds(42));
+        _tracker.SetDisconnected();
+
+        var disconnectedResult = await _healthCheck.CheckHealthAsync(context);
+        Assert.Equal(HealthStatus.Unhealthy, disconnectedResult.Status);
+
+        _tracker.SetResumed(TimeSpan.FromMilliseconds(55));
+
+        var result = await _healthCheck.CheckHealthAsync(context);
+
+        Assert.Equal(HealthStatus.Healthy, result.Status);
+        Assert.Contains("TestBot#1234", result.Description);
+        Assert.Equal("TestBot#1234", result.Data["botUsername"]);
+        Assert.Equal(55.0, (double)result.Data["latencyMs"]);
+        Assert.NotNull(result.Data["readyAt"]);
+    }
 }
