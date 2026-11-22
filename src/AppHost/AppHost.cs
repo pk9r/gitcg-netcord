@@ -1,10 +1,9 @@
 using Microsoft.Extensions.Configuration;
-using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var main = builder
-    .AddProject<GitcgNetCord_MainApp>("main")
+    .AddDotnetProject("main", "../GitcgNetCord.MainApp/GitcgNetCord.MainApp.csproj")
     .WithHttpHealthCheck("/health");
 
 var useRemoteRedis = builder.Configuration
@@ -58,7 +57,7 @@ else
     var postgres = builder.AddPostgres(
         name: "postgresql",
         password: postgresPassword
-    );
+    ).WithImageTag("17.6");
 
     postgres
         .WithDataVolume()
