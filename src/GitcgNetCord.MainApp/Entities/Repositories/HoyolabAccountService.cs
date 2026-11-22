@@ -46,7 +46,7 @@ public class HoyolabAccountService(
             var active = await dbContext.ActiveHoyolabAccounts
                 .FirstOrDefaultAsync(x => x.DiscordUserId == discordUserId);
 
-            if (active == null || active.HoyolabAccountId == Guid.Empty)
+            if (active == null || active.HoyolabAccountId == null)
             {
                 if (active == null)
                 {
@@ -80,7 +80,7 @@ public class HoyolabAccountService(
 
         if (
             discordUser.ActiveHoyolabAccount == null ||
-            discordUser.ActiveHoyolabAccount.HoyolabAccountId == Guid.Empty
+            discordUser.ActiveHoyolabAccount.HoyolabAccountId == null
         )
         {
             discordUser.ActiveHoyolabAccount = new ActiveHoyolabAccount
@@ -150,7 +150,7 @@ public class HoyolabAccountService(
                 activeAccount!.HoyolabAccountId = newActiveAccount.Id;
             }
         }
-        else if (activeAccount != null && activeAccount.HoyolabAccountId != Guid.Empty)
+        else if (activeAccount != null && activeAccount.HoyolabAccountId != null)
         {
             newActiveAccount = remainingAccounts.FirstOrDefault(x => x.Id == activeAccount.HoyolabAccountId);
         }

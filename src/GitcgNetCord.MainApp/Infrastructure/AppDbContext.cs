@@ -49,6 +49,12 @@ public class AppDbContext : DbContext
             config.HasKey(x => x.DiscordUserId);
             config.Property(x => x.DiscordUserId)
                 .ValueGeneratedNever();
+
+            config.HasOne(x => x.HoyolabAccount)
+                .WithMany()
+                .HasForeignKey(x => x.HoyolabAccountId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<DiscordCardCodeChannel>(config =>
@@ -94,7 +100,8 @@ public class AppDbContext : DbContext
             config.HasOne(x => x.HoyolabAccount)
                 .WithMany(x => x.CardSnapshots)
                 .HasForeignKey(x => x.HoyolabAccountId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<DiscordDailyReportChannel>(config =>
@@ -114,6 +121,7 @@ public class AppDbContext : DbContext
             config.HasOne(x => x.HoyolabAccount)
                 .WithMany(x => x.DailyReportThreads)
                 .HasForeignKey(x => x.HoyolabAccountId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

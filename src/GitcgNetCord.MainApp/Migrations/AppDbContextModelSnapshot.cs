@@ -27,7 +27,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Property<decimal>("DiscordUserId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<Guid>("HoyolabAccountId")
+                    b.Property<Guid?>("HoyolabAccountId")
                         .HasColumnType("uuid");
 
                     b.HasKey("DiscordUserId");
@@ -53,7 +53,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Property<decimal>("DiscordUserId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<Guid>("HoyolabAccountId")
+                    b.Property<Guid?>("HoyolabAccountId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -134,7 +134,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<Guid>("HoyolabAccountId")
+                    b.Property<Guid?>("HoyolabAccountId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsEnabled")
@@ -277,8 +277,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.HasOne("GitcgNetCord.MainApp.Entities.HoyolabAccount", "HoyolabAccount")
                         .WithMany()
                         .HasForeignKey("HoyolabAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("DiscordUser");
 
@@ -290,8 +289,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.HasOne("GitcgNetCord.MainApp.Entities.HoyolabAccount", "HoyolabAccount")
                         .WithMany("CardSnapshots")
                         .HasForeignKey("HoyolabAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("HoyolabAccount");
                 });
@@ -301,8 +299,7 @@ namespace GitcgNetCord.MainApp.Migrations
                     b.HasOne("GitcgNetCord.MainApp.Entities.HoyolabAccount", "HoyolabAccount")
                         .WithMany("DailyReportThreads")
                         .HasForeignKey("HoyolabAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("HoyolabAccount");
                 });

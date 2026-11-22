@@ -3,7 +3,7 @@ namespace GitcgNetCord.MainApp.Entities;
 public class CardSnapshot
 {
     public Guid Id { get; set; }
-    public Guid HoyolabAccountId { get; set; }
+    public Guid? HoyolabAccountId { get; set; }
     public ulong DiscordUserId { get; set; }
 
     public string Name { get; set; } = string.Empty;
@@ -15,5 +15,5 @@ public class CardSnapshot
 
     public Dictionary<int, CardStatSummary> CardData { get; set; } = [];
 
-    public HoyolabAccount HoyolabAccount { get; set; } = null!;
+    public HoyolabAccount? HoyolabAccount { get; set; }
 }

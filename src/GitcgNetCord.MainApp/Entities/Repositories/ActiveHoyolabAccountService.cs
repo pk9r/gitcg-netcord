@@ -18,7 +18,7 @@ public class ActiveHoyolabAccountService(
         if (activeAccount == null)
             return null;
 
-        if (activeAccount.HoyolabAccountId == Guid.Empty)
+        if (activeAccount.HoyolabAccountId == null)
             return null;
 
         await dbContext.Entry(activeAccount)

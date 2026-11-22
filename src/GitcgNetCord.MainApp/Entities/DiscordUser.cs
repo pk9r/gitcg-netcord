@@ -23,7 +23,7 @@ public class DiscordUser
 
         if (
             ActiveHoyolabAccount == null ||
-            ActiveHoyolabAccount.HoyolabAccountId == Guid.Empty
+            ActiveHoyolabAccount.HoyolabAccountId == null
         )
         {
             ActiveHoyolabAccount = new ActiveHoyolabAccount
