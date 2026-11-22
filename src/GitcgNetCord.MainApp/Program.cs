@@ -1,4 +1,3 @@
-using Azure.Identity;
 using GitcgNetCord.MainApp.Components;
 using GitcgNetCord.MainApp.Configuration;
 using GitcgNetCord.MainApp.Endpoints;
@@ -11,14 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-var azureVaultUri = builder.Configuration["AzureVaultUri"];
-if (!string.IsNullOrEmpty(azureVaultUri))
-{
-    builder.Configuration.AddAzureKeyVault(
-        vaultUri: new Uri(azureVaultUri),
-        credential: new DefaultAzureCredential()
-    );
-}
+builder.Configuration.AddOpenBaoConfiguration();
 
 builder.Configuration.ValidateDiscordConfiguration();
 

@@ -12,8 +12,7 @@
     <!-- MainApp -->
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.6.5" />
     <PackageVersion Include="Aspire.StackExchange.Redis.DistributedCaching" Version="17.0.0" />
-    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
-    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
+    <PackageVersion Include="VaultSharp" Version="1.17.5.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="11.0.0" />
     <PackageVersion Include="Microsoft.SemanticKernel" Version="1.81.0" />
