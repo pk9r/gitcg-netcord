@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Entities.Repositories;
@@ -210,7 +211,7 @@ public class DailyReportDeliveryService(
 
         embed.AddFields(
             new EmbedFieldProperties().WithName("Games Played").WithValue($"{result.TotalGames}").WithInline(),
-            new EmbedFieldProperties().WithName("Wins").WithValue($"{result.TotalWins} ({result.OverallWinRate:P1})").WithInline(),
+            new EmbedFieldProperties().WithName("Wins").WithValue($"{result.TotalWins} ({FormatWinRate(result.OverallWinRate)})").WithInline(),
             new EmbedFieldProperties().WithName("Losses").WithValue($"{result.TotalGames - result.TotalWins}").WithInline()
         );
 
@@ -227,7 +228,7 @@ public class DailyReportDeliveryService(
                 var emojiPrefix = emojis != null && emojis.TryGetValue(card.Id.ToString(), out var emoji)
                     ? $"{emoji} "
                     : string.Empty;
-                var line = $"{i + 1}. {emojiPrefix}**{card.Name}** - {card.UseCount} games ({card.WinRate:P1} - {card.Proficiency}W/{card.UseCount - card.Proficiency}L)\n";
+                var line = $"{i + 1}. {emojiPrefix}**{card.Name}** - {card.UseCount} games ({FormatWinRate(card.WinRate)} - {card.Proficiency}W/{card.UseCount - card.Proficiency}L)\n";
 
                 if (sb.Length + line.Length > maxFieldLength && sb.Length > 0)
                 {
@@ -259,4 +260,7 @@ public class DailyReportDeliveryService(
         embed.WithFooter(new EmbedFooterProperties().WithText($"Total to date: {currentSnapshot.TotalGames} games ({currentSnapshot.TotalWins} wins)"));
         return embed;
     }
+
+    internal static string FormatWinRate(float winRate) =>
+        winRate.ToString("0.0%", CultureInfo.InvariantCulture);
 }

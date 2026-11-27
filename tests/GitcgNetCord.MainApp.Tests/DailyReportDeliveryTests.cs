@@ -1,3 +1,4 @@
+using System.Globalization;
 using GitcgNetCord.MainApp.Entities;
 using GitcgNetCord.MainApp.Infrastructure;
 using GitcgNetCord.MainApp.Models;
@@ -453,6 +454,72 @@ public class DailyReportDeliveryTests
         foreach (var field in embed.Fields)
         {
             Assert.True(field.Value?.Length <= 1024, $"Field '{field.Name}' exceeded 1024 characters.");
+        }
+    }
+
+    [Fact]
+    public void BuildDailyReportEmbed_UnderInvariantCulture_FormatsWinRateWithoutSpace()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+            var currentSnapshot = new CardSnapshot
+            {
+                Id = Guid.NewGuid(),
+                Name = "daily-20261112",
+                TotalGames = 54,
+                TotalWins = 38,
+                CardData = []
+            };
+
+            var previousSnapshot = new CardSnapshot
+            {
+                Id = Guid.NewGuid(),
+                Name = "daily-20261111",
+                TotalGames = 50,
+                TotalWins = 35,
+                CardData = []
+            };
+
+            var result = new PeriodicStatsResult(
+                TotalGames: 4,
+                TotalWins: 3,
+                OverallWinRate: 0.75f,
+                MinUseCountThreshold: 1,
+                IsPercentThreshold: true,
+                MinUseCountInput: "1%",
+                BestWinRateCharacters:
+                [
+                    new CardDeltaStat(1, "Raiden Shogun", "CardTypeCharacter", 4, 3, 0.75f)
+                ],
+                LowestWinRateCharacters: [],
+                TopUseCharacters:
+                [
+                    new CardDeltaStat(1, "Raiden Shogun", "CardTypeCharacter", 4, 3, 0.75f)
+                ],
+                TopUseActions: []
+            );
+
+            var embed = DailyReportDeliveryService.BuildDailyReportEmbed(
+                _testAccount,
+                currentSnapshot,
+                previousSnapshot,
+                result,
+                new DateTime(2026, 11, 12)
+            );
+
+            Assert.NotNull(embed.Fields);
+            var winsField = Assert.Single(embed.Fields, f => f.Name == "Wins");
+            Assert.Equal("3 (75.0%)", winsField.Value);
+
+            var charField = Assert.Single(embed.Fields, f => f.Name == "Characters Used");
+            Assert.Contains("4 games (75.0% - 3W/1L)", charField.Value);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
         }
     }
 }

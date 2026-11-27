@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using GitcgNetCord.MainApp.Commands.Autocompletes;
 using GitcgNetCord.MainApp.Entities;
@@ -256,7 +257,7 @@ public static class CardSlashCommand
             var x = result.BestWinRateCharacters[i];
             var emojiStr = emojis.TryGetValue(x.Id.ToString(), out var emoji) ? $"{emoji} " : "";
             bestWinRateStringBuilder.AppendLine(
-                $"{i + 1}. {emojiStr}{x.Name} - {x.WinRate:P2} ({x.Proficiency}/{x.UseCount})"
+                $"{i + 1}. {emojiStr}{x.Name} - {FormatWinRate(x.WinRate)} ({x.Proficiency}/{x.UseCount})"
             );
         }
         if (result.BestWinRateCharacters.Count == 0)
@@ -270,7 +271,7 @@ public static class CardSlashCommand
             var x = result.LowestWinRateCharacters[i];
             var emojiStr = emojis.TryGetValue(x.Id.ToString(), out var emoji) ? $"{emoji} " : "";
             lowestWinRateStringBuilder.AppendLine(
-                $"{i + 1}. {emojiStr}{x.Name} - {x.WinRate:P2} ({x.Proficiency}/{x.UseCount})"
+                $"{i + 1}. {emojiStr}{x.Name} - {FormatWinRate(x.WinRate)} ({x.Proficiency}/{x.UseCount})"
             );
         }
         if (result.LowestWinRateCharacters.Count == 0)
@@ -326,7 +327,7 @@ public static class CardSlashCommand
                             .WithInline(),
                         new EmbedFieldProperties()
                             .WithName("Total wins")
-                            .WithValue($"{result.TotalWins} ({result.OverallWinRate:P2})")
+                            .WithValue($"{result.TotalWins} ({FormatWinRate(result.OverallWinRate)})")
                             .WithInline()
                     ),
                 new EmbedProperties()
@@ -364,4 +365,7 @@ public static class CardSlashCommand
             );
         });
     }
+
+    public static string FormatWinRate(float winRate) =>
+        winRate.ToString("0.00%", CultureInfo.InvariantCulture);
 }
