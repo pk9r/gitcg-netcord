@@ -102,7 +102,7 @@ The system SHALL allow thread owners or the user who subscribed an account to un
 - **THEN** the system SHALL display the subscription status or thread guidance without rendering empty suggestion fields or empty button action rows
 
 ### Requirement: Automated daily thread report delivery
-The system SHALL automatically compute and post daily card statistics reports into active subscribed Discord destinations (threads and Direct Message channels) upon capturing an account's daily snapshot. All report embeds, field titles, notices, and summary texts SHALL be rendered completely in English. The report embed SHALL display a unified Characters Used section showing all characters used during the period with role avatar icons, game count, win rate, and win/loss record. The report embed SHALL display up to the Top 10 most used action cards, and format the Period field to reflect the exact game date or date range.
+The system SHALL automatically compute and post daily card statistics reports into active subscribed Discord destinations (threads and Direct Message channels) upon capturing an account's daily snapshot. All report embeds, field titles, notices, and summary texts SHALL be rendered completely in English, and win-rate percentages SHALL format deterministically without locale-dependent whitespace between the numeric percentage and `%` (for example, `75.0%`) regardless of host OS culture. The report embed SHALL display a unified Characters Used section showing all characters used during the period with role avatar icons, game count, win rate, and win/loss record. The report embed SHALL display up to the Top 10 most used action cards, and format the Period field to reflect the exact game date or date range.
 
 #### Scenario: Daily report delivery when matches were played
 - **GIVEN** an account has active thread or DM subscriptions and delta games played since the previous snapshot is greater than zero
@@ -128,6 +128,11 @@ The system SHALL automatically compute and post daily card statistics reports in
 - **GIVEN** a subscribed thread is deleted, archived, or inaccessible, or a user has blocked bot DMs (403 Forbidden)
 - **WHEN** the system attempts to deliver a daily report
 - **THEN** the system SHALL log the delivery failure, mark the subscription as disabled, and continue delivering reports to remaining destinations without crashing
+
+#### Scenario: Culture-invariant win-rate percentage formatting across host locales
+- **GIVEN** the application runs under a host culture where standard percent formatting inserts whitespace before `%` (such as Linux ICU defaults or `InvariantCulture`)
+- **WHEN** the daily report embed formats overall win rate and per-character win rates
+- **THEN** the system SHALL render percentages using `.` as the decimal separator and no space before `%` (for example, `75.0%`)
 
 ### Requirement: Automated Thread Creation and Subscription
 The system SHALL automatically create a Discord thread within an approved parent channel and subscribe the user's Hoyolab account to daily reports when selected from the report destination picker. All thread names, initial messages, and notifications SHALL be rendered completely in English.
